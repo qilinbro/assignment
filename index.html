@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英语课程作业管家</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f0f2f5;color:#333}
+:root{--p:#4f46e5;--s:#10b981;--w:#f59e0b;--d:#ef4444;--g:#6b7280;--bd:#e5e7eb}
+.bg-purple{background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.nav{background:var(--p);color:#fff;height:56px;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:99;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.nav-in{max-width:1100px;margin:0 auto;width:100%;display:flex;justify-content:space-between;align-items:center}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid var(--bd)}
+.h1{font-size:20px;font-weight:700;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 8px;background:#f9fafb;border-bottom:2px solid var(--bd);white-space:nowrap}
+td{padding:10px 8px;border-bottom:1px solid var(--bd)}
+.btn{padding:7px 16px;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.bp{background:var(--p);color:#fff}.bp:hover{background:#4338ca}
+.bs{background:var(--s);color:#fff}.bs:hover{background:#059669}
+.bw{background:var(--w);color:#fff}
+.bo{background:#fff;border:1px solid var(--bd);color:#374151}.bo:hover{background:#f9fafb}
+.bd{background:var(--d);color:#fff}
+.bs2{padding:4px 10px;font-size:12px}
+.fi{width:100%;padding:9px 11px;border:1px solid var(--bd);border-radius:7px;font-size:13px;margin-bottom:12px}
+.fi:focus{outline:none;border-color:var(--p)}
+.fl{font-size:13px;font-weight:500;margin-bottom:5px;color:#374151;display:block}
+.ta{min-height:70px;resize:vertical;font-family:inherit}
+.bdg{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.bdg-n{background:#dbeafe;color:#1e40af}.bdg-l{background:#fee2e2;color:#991b1b}
+.bdg-p{background:#fef3c7;color:#92400e}.bdg-g{background:#d1fae5;color:#065f46}
+.typ{display:inline-block;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:600}
+.typ-y{background:#fef3c7;color:#92400e}.typ-x{background:#dbeafe;color:#1e40af}
+.tabs{display:flex;border-bottom:2px solid var(--bd);margin-bottom:16px;gap:0;flex-wrap:wrap}
+.tab{padding:9px 16px;cursor:pointer;font-size:13px;color:var(--g);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap}
+.tab.on{color:var(--p);border-bottom-color:var(--p);font-weight:600}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;padding:20px;overflow-y:auto}
+.modal-bg.show{display:flex;justify-content:center;align-items:flex-start}
+.modal{background:#fff;border-radius:12px;padding:22px;width:100%;max-width:580px;margin-bottom:40px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal.wide{max-width:880px}
+.upload{border:2px dashed var(--bd);border-radius:10px;padding:28px;text-align:center;cursor:pointer;background:#fafafa}
+.upload:hover{border-color:var(--p);background:#f5f5ff}
+.prev{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.thumb{position:relative;width:90px;height:90px;border-radius:7px;overflow:hidden;border:1px solid var(--bd)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb button{position:absolute;top:1px;right:1px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer}
+.gl{display:grid;grid-template-columns:1fr 300px;gap:16px}
+.gl-l{background:#f9fafb;border-radius:10px;padding:14px}
+.gl-l img{width:100%;border-radius:7px;margin-bottom:10px;border:1px solid var(--bd);cursor:zoom-in}
+@media(max-width:768px){.gl{grid-template-columns:1fr}.wrap{padding:10px}}
+.entry{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.entry-it{border-radius:12px;padding:22px 18px;cursor:pointer;text-align:center;border:2px solid;transition:all .15s}
+.entry-it:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.entry-it.off{opacity:.35;cursor:default;pointer-events:none}
+@media(max-width:768px){.entry{grid-template-columns:1fr}}
+.alert{border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;display:flex;gap:6px}
+.alert-i{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}
+.alert-w{background:#fef3c7;color:#92400e;border:1px solid #fbbf24}
+.link-b{background:#1e293b;color:#a5b4fc;border-radius:7px;padding:12px 14px;font-family:monospace;font-size:12px;word-break:all;cursor:pointer}
+.sts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:18px}
+.sts-it{background:#fff;border-radius:10px;padding:14px;border:1px solid var(--bd);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.sts-n{font-size:24px;font-weight:700}
+.sts-l{font-size:12px;color:var(--g)}
+.pbar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:4px}
+.pfill{height:100%;border-radius:3px}
+.score-d{font-size:18px;font-weight:700;color:var(--p)}
+.fb{background:#f9fafb;border-radius:7px;padding:10px;font-size:12px;color:#4b5563;line-height:1.5;margin-top:6px}
+.rw{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bd)}
+.rw:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+<div id="rt"></div>
+<div class="modal-bg" id="mbg"><div class="modal" id="mdl"></div></div>
+<script>
+// ===== DATA =====
+var K='hw_v6',AP='1234567';
+var TP={yingyongwen:{l:'应用文',s:'应用文',m:15,c:'typ-y'},xuxie:{l:'读后续写',s:'续写',m:25,c:'typ-x'}};
+function def(){return{
+tas:[{i:'T001',n:'王雪'},{i:'T002',n:'赵磊'},{i:'T003',n:'林婷'}],
+sts:[{i:'S001',n:'李明',t:'T001'},{i:'S002',n:'张芳',t:'T001'},{i:'S003',n:'刘洋',t:'T001'},
+{i:'S004',n:'王强',t:'T002'},{i:'S005',n:'孙丽',t:'T002'},{i:'S006',n:'周伟',t:'T002'},
+{i:'S007',n:'郑华',t:'T003'},{i:'S008',n:'冯雪',t:'T003'}],
+asg:[{i:'a1',tp:'yingyongwen',ti:'第1课 · 应用文 — 建议信',dl:'2026-08-20T23:59',pub:true},
+{i:'a2',tp:'xuxie',ti:'第2课 · 读后续写 — 记叙文',dl:'2026-08-25T23:59',pub:true}],
+sub:[{i:'x1',si:'S001',ai:'a1',img:[],nt:'',tp:'正常提交',st:'2026-08-10T15:30',sd:'已批改',ti:'T001',sc:'12',fb:'格式正确，语言可更精练。',gt:'2026-08-11T10:00'},
+{i:'x2',si:'S002',ai:'a1',img:[],nt:'',tp:'正常提交',st:'2026-08-10T16:00',sd:'待批改',ti:'T001',sc:'',fb:'',gt:''}],
+mreq:[]
+}}
+function ldb(){var r=localStorage.getItem(K);if(!r){var d=def();svb(d);return d}try{return JSON.parse(r)}catch(e){var d=def();svb(d);return d}}
+function svb(d){try{localStorage.setItem(K,JSON.stringify(d))}catch(e){alert('存储不足')}}
+var DB=ldb(),ses=null,pImg=[];
+
+// ===== HELPERS =====
+function gS(i){return DB.sts.find(function(s){return s.i===i})}
+function gT(i){return DB.tas.find(function(t){return t.i===i})}
+function gA(i){return DB.asg.find(function(a){return a.i===i})}
+function sN(i){var s=gS(i);return s?s.n:'?'}
+function tN(i){var t=gT(i);return t?t.n:'?'}
+function aN(i){var a=gA(i);return a?a.ti:'?'}
+function aTP(i){var a=gA(i);return a?a.tp:'yingyongwen'}
+function aMx(i){var a=gA(i);return a?TP[a.tp].m:15}
+function fmt(t){return t?t.replace('T',' ').replace(/:\d{2}$/,''):'-'}
+function late(s,d){return new Date(s)>new Date(d)}
+function now(){var d=new Date(),p=function(n){return(''+n).padStart(2,'0')};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())}
+function uid(){return 'id'+Date.now()+Math.random().toString(36).slice(2,5)}
+function hasSub(si,ai){return DB.sub.some(function(s){return s.si===si&&s.ai===ai})}
+function getSub(si,ai){return DB.sub.find(function(s){return s.si===si&&s.ai===ai})}
+function getMR(si,ai){return DB.mreq.find(function(r){return r.si===si&&r.ai===ai&&r.sd==='pending'})}
+function H(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ===== LOGIN =====
+function showLogin(){
+document.getElementById('rt').innerHTML='<div class="bg-purple"><div style="background:#fff;border-radius:16px;padding:36px;width:90%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)">'+
+'<div style="font-size:22px;font-weight:700;text-align:center;margin-bottom:6px">📝 英语课程作业管家</div>'+
+'<div style="font-size:13px;color:#6b7280;text-align:center;margin-bottom:24px">请输入学号 / 工号登录</div>'+
+'<input style="width:100%;padding:13px;border:2px solid #e5e7eb;border-radius:10px;font-size:16px;margin-bottom:14px;text-align:center" id="lid" placeholder="学号（如 S001）" onkeyup="if(event.key===\'Enter\')doLogin()">'+
+'<button style="width:100%;padding:13px;background:#4f46e5;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer" onclick="doLogin()">登 录</button>'+
+'<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#6b7280;line-height:1.8">'+
+'学生：<code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;color:#4f46e5">S001</code>~<code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;color:#4f46e5">S008</code>　'+
+'助教：<code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;color:#4f46e5">T001</code>~<code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;color:#4f46e5">T003</code>　'+
+'管理员：<code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;color:#4f46e5">admin</code>（需密码）</div></div></div>';
+}
+function doLogin(){
+var id=document.getElementById('lid').value.trim().toUpperCase();
+if(!id){alert('请输入学号');return}
+if(id==='ADMIN'){showAdminPwd();return}
+var s=gS(id);if(s){ses={r:'student',i:s.i,n:s.n};go();return}
+var t=gT(id);if(t){ses={r:'ta',i:t.i,n:t.n};go();return}
+alert('未找到该学号/工号');
+}
+function showAdminPwd(){
+document.getElementById('rt').innerHTML='<div class="bg-purple"><div style="background:#fff;border-radius:16px;padding:36px;width:90%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)">'+
+'<div style="font-size:22px;font-weight:700;text-align:center;margin-bottom:6px">🔐 管理员登录</div>'+
+'<div style="font-size:13px;color:#6b7280;text-align:center;margin-bottom:24px">请输入密码</div>'+
+'<input type="password" style="width:100%;padding:13px;border:2px solid #e5e7eb;border-radius:10px;font-size:16px;margin-bottom:14px;text-align:center" id="apwd" placeholder="密码" onkeyup="if(event.key===\'Enter\')verifyAdmin()">'+
+'<button style="width:100%;padding:13px;background:#4f46e5;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer" onclick="verifyAdmin()">确 认</button>'+
+'<button style="width:100%;margin-top:10px;padding:8px;background:transparent;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;color:#6b7280" onclick="showLogin()">← 返回</button></div></div>';
+}
+function verifyAdmin(){
+if(document.getElementById('apwd').value===AP){ses={r:'admin',i:'admin',n:'管理员'};go()}
+else{alert('密码错误');document.getElementById('apwd').value=''}
+}
+function logout(){ses=null;showLogin()}
+
+// ===== GO (main render) =====
+function go(){
+if(!ses){showLogin();return}
+var h='<div class="nav"><div class="nav-in"><div style="font-size:17px;font-weight:700">📝 英语课程作业管家</div><div style="font-size:13px;display:flex;align-items:center;gap:10px"><span>'+H(ses.n)+'（'+ses.i+'）</span><button onclick="logout()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 12px;border-radius:7px;cursor:pointer;font-size:12px">退出</button></div></div></div><div class="wrap" id="ac"></div>';
+document.getElementById('rt').innerHTML=h;
+if(ses.r==='student')rStu();else if(ses.r==='ta')rTA();else rAdm();
+// 检查链接跳转
+var pa=sessionStorage.getItem('pSub');
+if(pa&&ses.r==='student'){sessionStorage.removeItem('pSub');if(gA(pa)&&!hasSub(ses.i,pa))setTimeout(function(){openSubmit(pa)},400)}
+}
+
+// ===== STUDENT =====
+function rStu(){
+var st=gS(ses.i),ta=gT(st.t);
+var ms=DB.sub.filter(function(s){return s.si===ses.i});
+var pub=DB.asg.filter(function(a){return a.pub});
+var canN=[],canL=[],done=[];
+pub.forEach(function(a){
+if(!hasSub(ses.i,a.i)){if(new Date()<new Date(a.dl))canN.push(a);else canL.push(a)}
+else done.push(a);
+});
+var gr=ms.filter(function(s){return s.sd==='已批改'});
+var ac=document.getElementById('ac');
+var h='<div class="h1">你好，'+H(st.n)+' 👋</div>';
+h+='<div style="font-size:13px;color:#6b7280;margin-bottom:16px">你的助教：<strong>'+H(ta?ta.n:'未分配')+'</strong></div>';
+// 入口卡片
+h+='<div class="entry">';
+h+='<div class="entry-it'+(canN.length===0?' off':'')+'" style="border-color:#10b981;background:linear-gradient(135deg,#f0fdf4,#dcfce7)"'+(canN.length>0?' onclick="goList(\'n\')"':'')+'><div style="font-size:36px">📝</div><div style="font-size:17px;font-weight:700;color:#10b981;margin-top:8px">提交作业</div><div style="font-size:12px;color:#6b7280;margin-top:4px">截止时间前的正常提交</div><div style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:16px;font-size:13px;font-weight:600;background:#d1fae5;color:#065f46">'+canN.length+' 份待提交</div></div>';
+h+='<div class="entry-it'+(canL.length===0?' off':'')+'" style="border-color:#f59e0b;background:linear-gradient(135deg,#fffbeb,#fef3c7)"'+(canL.length>0?' onclick="goList(\'l\')"':'')+'><div style="font-size:36px">⏰</div><div style="font-size:17px;font-weight:700;color:#92400e;margin-top:8px">补交作业</div><div style="font-size:12px;color:#6b7280;margin-top:4px">已过截止时间的补交</div><div style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:16px;font-size:13px;font-weight:600;background:#fef3c7;color:#92400e">'+canL.length+' 份待补交</div></div>';
+h+='</div>';
+// 统计
+h+='<div class="sts">';
+h+='<div class="sts-it"><div class="sts-l">已批改</div><div class="sts-n" style="color:#10b981">'+gr.length+'</div></div>';
+h+='<div class="sts-it"><div class="sts-l">等待批改</div><div class="sts-n" style="color:#f59e0b">'+ms.filter(function(s){return s.sd==='待批改'}).length+'</div></div>';
+h+='<div class="sts-it"><div class="sts-l">未提交</div><div class="sts-n" style="color:#ef4444">'+(canN.length+canL.length)+'</div></div>';
+h+='</div>';
+// Tabs
+h+='<div class="tabs" id="stb"><div class="tab on" onclick="stab(\'list\',this)">📋 我的作业</div><div class="tab" onclick="stab(\'fb\',this)">📊 批改反馈</div></div>';
+h+='<div id="stc"></div>';
+ac.innerHTML=h;
+renderSList();
+}
+function goList(t){stab('list',null);setTimeout(function(){var e=document.getElementById(t==='l'?'sec-l':'sec-n');if(e)e.scrollIntoView({behavior:'smooth'})},50)}
+functionstab=stab;function stab(t,el){
+document.querySelectorAll('#stb .tab').forEach(function(x){x.classList.remove('on')});
+if(el)el.classList.add('on');
+if(t==='list')renderSList();else renderSFB();
+}
+function renderSList(){
+var pub=DB.asg.filter(function(a){return a.pub});
+var canN=[],canL=[],done=[];
+pub.forEach(function(a){if(!hasSub(ses.i,a.i)){if(new Date()<new Date(a.dl))canN.push(a);else canL.push(a)}else done.push(a)});
+var h='';
+// 正常提交
+h+='<div class="card" id="sec-n"><div style="font-weight:600;margin-bottom:10px">📝 可以提交的作业（'+canN.length+'）</div>';
+if(!canN.length)h+='<div style="text-align:center;padding:16px;color:#9ca3af">暂无</div>';
+canN.forEach(function(a){var tp=TP[a.tp];
+h+='<div class="rw"><div><span class="typ '+tp.c+'">'+tp.l+'</span> <strong>'+H(a.ti)+'</strong> <span style="font-size:12px;color:#6b7280">满分'+tp.m+'</span></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#10b981">截止 '+fmt(a.dl)+'</span><button class="btn bs bs2" onclick="openSubmit(\''+a.i+'\')">去提交</button></div></div>';
+});
+h+='</div>';
+// 补交
+h+='<div class="card" id="sec-l" style="border-left:4px solid #f59e0b"><div style="font-weight:600;margin-bottom:10px">⏰ 补交作业（'+canL.length+'）</div>';
+if(!canL.length)h+='<div style="text-align:center;padding:16px;color:#9ca3af">暂无</div>';
+canL.forEach(function(a){var tp=TP[a.tp];
+h+='<div class="rw"><div><span class="typ '+tp.c+'">'+tp.l+'</span> <strong>'+H(a.ti)+'</strong> <span style="font-size:12px;color:#6b7280">满分'+tp.m+'</span></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#ef4444">已过截止 '+fmt(a.dl)+'</span><button class="btn bw bs2" onclick="openSubmit(\''+a.i+'\')">去补交</button></div></div>';
+});
+h+='</div>';
+// 已提交
+if(done.length){
+h+='<div class="card"><div style="font-weight:600;margin-bottom:10px">✅ 已提交（'+done.length+'）</div>';
+done.forEach(function(a){var sb=getSub(ses.i,a.i),mr=getMR(ses.i,a.i),tp=TP[a.tp];
+var bdg='<span class="bdg '+(sb.tp==='补交'?'bdg-l':'bdg-n')+'">'+sb.tp+'</span>';
+if(sb.sd==='已批改')bdg+=' <span class="bdg bdg-g">'+sb.sc+'/'+tp.m+'分</span>';else bdg+=' <span class="bdg bdg-p">待批改</span>';
+var act;if(mr){bdg+=' <span class="bdg bdg-p">修改审核中</span>';act='<span style="font-size:12px;color:#9ca3af">等审核</span>'}else act='<button class="btn bo bs2" onclick="openMR(\''+a.i+'\')">申请修改</button>';
+h+='<div class="rw"><div><span class="typ '+tp.c+'">'+tp.l+'</span> <strong>'+H(a.ti)+'</strong><div style="font-size:12px;color:#6b7280;margin-top:4px">'+fmt(sb.st)+' · '+bdg+'</div></div><div>'+act+'</div></div>';
+});
+h+='</div>';
+}
+document.getElementById('stc').innerHTML=h;
+}
+function renderSFB(){
+var g=DB.sub.filter(function(s){return s.si===ses.i&&s.sd==='已批改'});
+var el=document.getElementById('stc');
+if(!g.length){el.innerHTML='<div class="card" style="text-align:center;padding:40px;color:#9ca3af"><div style="font-size:40px">📝</div>还没有批改反馈</div>';return}
+var h='<div class="card">';
+g.forEach(function(s){var tp=TP[aTP(s.ai)];
+h+='<div style="padding:14px;border:1px solid #e5e7eb;border-radius:9px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><div><span class="typ '+tp.c+'">'+tp.l+'</span> <strong>'+H(aN(s.ai))+'</strong></div><span style="font-size:12px;color:#9ca3af">'+fmt(s.gt)+'</span></div><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><div style="background:#4f46e5;color:#fff;padding:4px 12px;border-radius:7px;font-size:15px;font-weight:700">'+s.sc+'<span style="font-size:12px;opacity:.7">/'+tp.m+'</span></div><span class="bdg '+(s.tp==='补交'?'bdg-l':'bdg-n')+'">'+s.tp+'</span></div><div style="font-size:12px;color:#6b7280;margin-bottom:3px">💬 助教评语</div><div class="fb">'+H(s.fb||'无')+'</div></div>';
+});
+h+='</div>';el.innerHTML=h;
+}
+
+// ===== SUBMIT =====
+function openSubmit(aid){
+var a=gA(aid),tp=TP[a.tp],isL=new Date()>new Date(a.dl);
+pImg=[];
+var m=document.getElementById('mdl');m.className='modal';
+m.innerHTML='<div style="font-size:17px;font-weight:700;margin-bottom:16px">'+(isL?'⏰ 补交作业':'📝 提交作业')+'</div>'+
+'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span class="typ '+tp.c+'" style="font-size:13px;padding:4px 12px">'+tp.l+'</span><strong>'+H(a.ti)+'</strong><span style="font-size:13px;color:#6b7280">满分'+tp.m+'</span></div>'+
+'<div class="alert '+(isL?'alert-w':'alert-i')+'"><span>'+(isL?'⚠️':'ℹ️')+'</span><div>'+(isL?'<strong style="color:#ef4444">已过截止，本次为补交。</strong>':'截止 '+fmt(a.dl)+'，<strong>本次为正常提交。</strong>')+'</div></div>'+
+'<label class="fl">上传作业图片（可多选）</label><div class="upload" onclick="document.getElementById(\'fi\').click()"><div style="font-size:34px">📷</div><div style="font-size:13px;color:#6b7280">点击选择图片</div></div><input type="file" id="fi" accept="image/*" multiple style="display:none" onchange="handleF(this.files)"><div class="prev" id="pg"></div>'+
+'<label class="fl">备注（选填）</label><textarea class="fi ta" id="snote" placeholder="对助教说点什么"></textarea>'+
+'<div style="display:flex;gap:10px;margin-top:14px"><button class="btn '+(isL?'bw':'bp')+'" style="flex:1" onclick="doSub(\''+aid+'\')">确认'+(isL?'补交':'提交')+'（提交后不可直接修改）</button><button class="btn bo" onclick="cmodal()">取消</button></div>';
+document.getElementById('mbg').classList.add('show');
+}
+function handleF(fs){Array.from(fs).forEach(function(f){if(!f.type.startsWith('image/'))return;var r=new FileReader();r.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas'),mw=1200,w=img.width,h=img.height;if(w>mw){h=h*mw/w;w=mw}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);pImg.push(c.toDataURL('image/jpeg',.7));renderP()};img.src=e.target.result};r.readAsDataURL(f)})}
+function renderP(){var g=document.getElementById('pg');if(g)g.innerHTML=pImg.map(function(d,i){return '<div class="thumb"><img src="'+d+'"><button onclick="event.stopPropagation();rmImg('+i+')">×</button></div>'}).join('')}
+function rmImg(i){pImg.splice(i,1);renderP()}
+function doSub(aid){if(!pImg.length){alert('请上传图片');return}var a=gA(aid),st=gS(ses.i),tm=now();
+DB.sub.push({i:uid(),si:ses.i,ai:aid,img:pImg.slice(),nt:(document.getElementById('snote').value||'').trim(),tp:late(tm,a.dl)?'补交':'正常提交',st:tm,sd:'待批改',ti:st.t,sc:'',fb:'',gt:''});
+svb(DB);pImg=[];cmodal();go();}
+
+// ===== MOD REQUEST =====
+function openMR(aid){
+var m=document.getElementById('mdl');m.className='modal';
+m.innerHTML='<div style="font-size:17px;font-weight:700;margin-bottom:14px">申请修改作业</div><div class="alert alert-w"><span>⚠️</span><div>提交后不可直接修改，需填原因，管理员同意后才能重新提交。</div></div><label class="fl">修改原因</label><textarea class="fi ta" id="mrr" style="min-height:90px" placeholder="如：图片传错了/不清晰/漏页"></textarea><div style="display:flex;gap:10px;margin-top:14px"><button class="btn bp" style="flex:1" onclick="doMR(\''+aid+'\')">提交申请</button><button class="btn bo" onclick="cmodal()">取消</button></div>';
+document.getElementById('mbg').classList.add('show');
+}
+function doMR(aid){var r=(document.getElementById('mrr').value||'').trim();if(!r){alert('请填写原因');return}DB.mreq.push({i:uid(),si:ses.i,ai:aid,rs:r,sd:'pending',rt:now()});svb(DB);cmodal();go();}
+
+// ===== TA =====
+function rTA(){
+var ms=DB.sub.filter(function(s){return s.ti===ses.i});
+var pn=ms.filter(function(s){return s.sd==='待批改'}).sort(function(a,b){return new Date(a.st)-new Date(b.st)});
+var gr=ms.filter(function(s){return s.sd==='已批改'});
+var rate=ms.length>0?Math.round(gr.length/ms.length*100):0;
+var ms2=DB.sts.filter(function(s){return s.t===ses.i});
+var ac=document.getElementById('ac');
+var h='<div class="h1">'+H(ses.n)+' · 助教工作台</div>';
+h+='<div class="sts"><div class="sts-it"><div class="sts-l">待批改</div><div class="sts-n" style="color:#f59e0b">'+pn.length+'</div></div><div class="sts-it"><div class="sts-l">已批改</div><div class="sts-n" style="color:#10b981">'+gr.length+'</div></div><div class="sts-it"><div class="sts-l">完成率</div><div class="sts-n" style="color:#4f46e5">'+rate+'%</div><div class="pbar"><div class="pfill" style="width:'+rate+'%;background:#10b981"></div></div></div><div class="sts-it"><div class="sts-l">负责学生</div><div class="sts-n" style="color:#4f46e5">'+ms2.length+'</div></div></div>';
+if(pn.length>0)h+='<div class="card" style="border-left:4px solid #f59e0b;display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600">'+pn.length+' 份待批改</div></div><button class="btn bp" onclick="startCG()">🚀 连续批改</button></div>';
+h+='<div class="tabs" id="ttb"><div class="tab on" onclick="ttab(\'pn\',this)">待批改（'+pn.length+'）</div><div class="tab" onclick="ttab(\'gr\',this)">已批改（'+gr.length+'）</div><div class="tab" onclick="ttab(\'st\',this)">我的学生</div></div>';
+h+='<div id="ttc"></div>';
+ac.innerHTML=h;renderTPN();
+}
+function ttab(t,el){document.querySelectorAll('#ttb .tab').forEach(function(x){x.classList.remove('on')});if(el)el.classList.add('on');if(t==='pn')renderTPN();else if(t==='gr')renderTGR();else renderTST()}
+function renderTPN(){
+var pn=DB.sub.filter(function(s){return s.ti===ses.i&&s.sd==='待批改'}).sort(function(a,b){return new Date(a.st)-new Date(b.st)});
+var el=document.getElementById('ttc');
+if(!pn.length){el.innerHTML='<div class="card" style="text-align:center;padding:40px;color:#9ca3af"><div style="font-size:40px">🎉</div>全部完成</div>';return}
+var h='<div class="card"><table><thead><tr><th>#</th><th>学生</th><th>类型</th><th>作业</th><th>提交</th><th>图</th><th>等待</th><th></th></tr></thead><tbody>';
+pn.forEach(function(s,i){var tp=TP[aTP(s.ai)];var ic=(s.img||[]).length;
+var wl=Date.now()-new Date(s.st).getTime();var hh=Math.floor(wl/3600000);
+h+='<tr><td>'+(i+1)+'</td><td><strong>'+H(sN(s.si))+'</strong></td><td><span class="typ '+tp.c+'">'+tp.s+'</span></td><td>'+H(aN(s.ai))+'</td><td><span class="bdg '+(s.tp==='补交'?'bdg-l':'bdg-n')+'">'+s.tp+'</span></td><td>'+(ic>0?'📷'+ic:'—')+'</td><td style="font-size:11px;'+(hh>=20?'color:#ef4444;font-weight:600':'color:#9ca3af')+'">'+(hh<1?Math.floor(wl/60000)+'分':hh<24?hh+'时':Math.floor(hh/24)+'天')+'</td><td><button class="btn bp bs2" onclick="openGrade(\''+s.i+'\')">批改</button></td></tr>';
+});
+h+='</tbody></table></div>';el.innerHTML=h;
+}
+function renderTGR(){
+var gr=DB.sub.filter(function(s){return s.ti===ses.i&&s.sd==='已批改'}).sort(function(a,b){return new Date(b.gt)-new Date(a.gt)});
+var el=document.getElementById('ttc');
+if(!gr.length){el.innerHTML='<div class="card" style="text-align:center;padding:40px;color:#9ca3af">暂无</div>';return}
+var h='<div class="card"><table><thead><tr><th>学生</th><th>类型</th><th>作业</th><th>成绩</th><th>评语</th><th>时间</th></tr></thead><tbody>';
+gr.forEach(function(s){var tp=TP[aTP(s.ai)];
+h+='<tr><td><strong>'+H(sN(s.si))+'</strong></td><td><span class="typ '+tp.c+'">'+tp.s+'</span></td><td>'+H(aN(s.ai))+'</td><td><span class="score-d">'+s.sc+'</span>/<span style="color:#9ca3af">'+tp.m+'</span></td><td style="max-width:180px"><div class="fb">'+H(s.fb||'—')+'</div></td><td style="font-size:12px">'+fmt(s.gt)+'</td></tr>';
+});
+h+='</tbody></table></div>';el.innerHTML=h;
+}
+function renderTST(){
+var ss=DB.sts.filter(function(s){return s.t===ses.i});
+var el=document.getElementById('ttc');
+var h='<div class="card"><table><thead><tr><th>学号</th><th>姓名</th><th>已交</th><th>待批改</th></tr></thead><tbody>';
+ss.forEach(function(st){var sb=DB.sub.filter(function(s){return s.si===st.i});var p=sb.filter(function(s){return s.sd==='待批改'}).length;
+h+='<tr><td><code>'+st.i+'</code></td><td><strong>'+H(st.n)+'</strong></td><td>'+sb.length+'</td><td>'+(p>0?'<span class="bdg bdg-p">'+p+'</span>':'—')+'</td></tr>';
+});
+h+='</tbody></table></div>';el.innerHTML=h;
+}
+function startCG(){var p=DB.sub.filter(function(s){return s.ti===ses.i&&s.sd==='待批改'}).sort(function(a,b){return new Date(a.st)-new Date(b.st)})[0];if(p)openGrade(p.i,true)}
+function openGrade(sid,cont){
+var sub=DB.sub.find(function(s){return s.i===sid});if(!sub)return;
+var tp=TP[aTP(sub.ai)],imgs=sub.img||[];
+var m=document.getElementById('mdl');m.className='modal wide';
+m.innerHTML='<div style="font-size:17px;font-weight:700;margin-bottom:14px">批改 · '+H(sN(sub.si))+' — '+tp.l+'（满分'+tp.m+'）</div><div class="gl"><div class="gl-l"><div style="font-weight:600;margin-bottom:10px">📷 作业图片（'+imgs.length+'张）</div>'+
+(imgs.length>0?imgs.map(function(src){return '<img src="'+src+'" onclick="window.open(\''+src+'\')">'}).join(''):'<div style="text-align:center;padding:40px;color:#9ca3af">无图片'+(sub.nt?'<br>备注：'+H(sub.nt):'')+'</div>')+
+(sub.nt?'<div style="font-size:12px;color:#6b7280;margin-top:8px">📝 '+H(sub.nt)+'</div>':'')+'</div><div style="display:flex;flex-direction:column;gap:14px"><div style="background:#f0f5ff;border-radius:8px;padding:12px;font-size:13px;line-height:1.8">学生：<strong>'+H(sN(sub.si))+'</strong><br>类型：<span class="typ '+tp.c+'">'+tp.l+'（'+tp.m+'分）</span><br>'+H(aN(sub.ai))+'<br><span class="bdg '+(sub.tp==='补交'?'bdg-l':'bdg-n')+'">'+sub.tp+'</span> · '+fmt(sub.st)+'</div><div><label class="fl">成绩</label><div style="display:flex;align-items:center;gap:8px"><input type="number" class="fi" style="width:80px;margin:0" id="gsc" min="0" max="'+tp.m+'" placeholder="0~'+tp.m+'" autofocus><span style="font-size:15px;color:#9ca3af;font-weight:600">/ '+tp.m+'</span></div></div><div><label class="fl">评语</label><textarea class="fi ta" id="gfb" style="min-height:100px"></textarea></div><div style="display:flex;flex-direction:column;gap:7px"><button class="btn bs" onclick="doGrade(\''+sid+'\','+!!cont+')">✅ 提交批改</button>'+(cont?'<button class="btn bo" onclick="skipG(\''+sid+'\')">跳过</button>':'')+'<button class="btn bo" onclick="cmodal()">关闭</button></div></div></div>';
+document.getElementById('mbg').classList.add('show');
+}
+function doGrade(sid,cont){var sc=(document.getElementById('gsc').value||'').trim();if(!sc){alert('请输入成绩');return}var sub=DB.sub.find(function(s){return s.i===sid});sub.sd='已批改';sub.sc=sc;sub.fb=(document.getElementById('gfb').value||'').trim();sub.gt=now();svb(DB);cmodal();
+if(cont){var nx=DB.sub.filter(function(s){return s.ti===ses.i&&s.sd==='待批改'}).sort(function(a,b){return new Date(a.st)-new Date(b.st)})[0];if(nx){go();setTimeout(function(){openGrade(nx.i,true)},200)}else{go();alert('🎉 全部完毕！')}}else go();}
+function skipG(sid){var nx=DB.sub.filter(function(s){return s.ti===ses.i&&s.sd==='待批改'&&s.i!==sid}).sort(function(a,b){return new Date(a.st)-new Date(b.st)})[0];cmodal();if(nx)setTimeout(function(){openGrade(nx.i,true)},200);else{go();alert('没有更多了')}}
+
+// ===== ADMIN =====
+function rAdm(){
+var pm=DB.mreq.filter(function(r){return r.sd==='pending'});
+var pub=DB.asg.filter(function(a){return a.pub});
+var ac=document.getElementById('ac');
+var h='<div class="h1">教师管理后台</div>';
+if(pm.length>0)h+='<div class="alert alert-w"><span>⚠️</span><div><strong>'+pm.length+'</strong> 条修改申请待处理 → <a href="#" onclick="atab(\'mr\',null);return false" style="font-weight:600">去处理</a></div></div>';
+h+='<div class="sts"><div class="sts-it"><div class="sts-l">已发布</div><div class="sts-n" style="color:#4f46e5">'+pub.length+'</div></div><div class="sts-it"><div class="sts-l">总提交</div><div class="sts-n" style="color:#10b981">'+DB.sub.length+'</div></div><div class="sts-it"><div class="sts-l">待批改</div><div class="sts-n" style="color:#f59e0b">'+DB.sub.filter(function(s){return s.sd==='待批改'}).length+'</div></div><div class="sts-it"><div class="sts-l">学生</div><div class="sts-n" style="color:#4f46e5">'+DB.sts.length+'</div></div></div>';
+h+='<div class="tabs" id="atb"><div class="tab on" onclick="atab(\'asg\',this)">📋 作业管理</div><div class="tab" onclick="atab(\'all\',this)">全部记录</div><div class="tab" onclick="atab(\'miss\',this)">未交名单</div><div class="tab" onclick="atab(\'mr\',this)">修改申请'+(pm.length>0?'（'+pm.length+'）':'')+'</div><div class="tab" onclick="atab(\'stu\',this)">学生管理</div></div>';
+h+='<div id="atc"></div>';
+ac.innerHTML=h;renderAsg();
+}
+function atab(t,el){document.querySelectorAll('#atb .tab').forEach(function(x){x.classList.remove('on')});if(el)el.classList.add('on');
+if(t==='asg')renderAsg();else if(t==='all')renderAll();else if(t==='miss')renderMiss();else if(t==='mr')renderMR();else renderStu();}
+function renderAsg(){
+var el=document.getElementById('atc');
+var h='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="font-weight:600">作业列表</div><button class="btn bp bs2" onclick="openPub()">＋ 发布新作业</button></div>';
+if(!DB.asg.length)h+='<div style="text-align:center;padding:24px;color:#9ca3af">还没有作业</div>';
+DB.asg.forEach(function(a){var tp=TP[a.tp],sb=DB.sub.filter(function(s){return s.ai===a.i}),g=sb.filter(function(s){return s.sd==='已批改'}).length,r=DB.sts.length>0?Math.round(sb.length/DB.sts.length*100):0,od=new Date(a.dl)<new Date();
+h+='<div style="padding:14px;border:1px solid #e5e7eb;border-radius:9px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="typ '+tp.c+'">'+tp.l+'</span><strong>'+H(a.ti)+'</strong><span style="font-size:12px;color:#9ca3af">'+tp.m+'分</span></div><div style="display:flex;gap:6px"><button class="btn bo bs2" onclick="showLink(\''+a.i+'\')">🔗链接</button><button class="btn bo bs2" onclick="openEditA(\''+a.i+'\')">编辑</button></div></div><div style="font-size:12px;color:#6b7280">'+fmt(a.dl)+(od?' <span style="color:#ef4444">(已截止)</span>':'')+' · 交'+sb.length+'/'+DB.sts.length+' · 改'+g+' · '+r+'%</div><div class="pbar" style="margin-top:6px"><div class="pfill" style="width:'+r+'%;background:'+(r>=80?'#10b981':r>=50?'#f59e0b':'#ef4444')+'"></div></div></div>';
+});
+h+='</div>';el.innerHTML=h;
+}
+function renderAll(){
+var el=document.getElementById('atc');
+var h='<div class="card"><table><thead><tr><th>学号</th><th>学生</th><th>类型</th><th>作业</th><th>提交</th><th>时间</th><th>状态</th><th>成绩</th><th>助教</th></tr></thead><tbody>';
+DB.sub.sort(function(a,b){return new Date(b.st)-new Date(a.st)}).forEach(function(s){var tp=TP[aTP(s.ai)];
+h+='<tr><td><code>'+s.si+'</code></td><td><strong>'+H(sN(s.si))+'</strong></td><td><span class="typ '+tp.c+'">'+tp.s+'</span></td><td>'+H(aN(s.ai))+'</td><td><span class="bdg '+(s.tp==='补交'?'bdg-l':'bdg-n')+'">'+s.tp+'</span></td><td>'+fmt(s.st)+'</td><td><span class="bdg '+(s.sd==='已批改'?'bdg-g':'bdg-p')+'">'+s.sd+'</span></td><td>'+(s.sc?s.sc+'/'+tp.m:'—')+'</td><td>'+H(tN(s.ti))+'</td></tr>';
+});
+h+='</tbody></table></div>';el.innerHTML=h;
+}
+function renderMiss(){
+var el=document.getElementById('atc'),rows='';
+DB.asg.filter(function(a){return a.pub}).forEach(function(a){var sb=DB.sub.filter(function(s){return s.ai===a.i}).map(function(s){return s.si});var miss=DB.sts.filter(function(s){return sb.indexOf(s.i)<0});if(miss.length>0){var od=new Date(a.dl)<new Date(),tp=TP[a.tp];rows+='<tr><td><span class="typ '+tp.c+'">'+tp.s+'</span> '+H(a.ti)+'</td><td><span class="bdg '+(od?'bdg-l':'bdg-p')+'">'+(od?'已逾期':'进行中')+'</span></td><td>'+miss.length+'/'+DB.sts.length+'</td><td>'+miss.map(function(s){return s.n}).join('、')+'</td></tr>'}});
+el.innerHTML='<div class="card"><table><thead><tr><th>作业</th><th>状态</th><th>未交</th><th>名单</th></tr></thead><tbody>'+(rows||'<tr><td colspan="4" style="text-align:center;padding:24px;color:#9ca3af">全部已提交🎉</td></tr>')+'</tbody></table></div>';
+}
+function renderMR(){
+var el=document.getElementById('atc'),rq=DB.mreq.sort(function(a,b){return new Date(b.rt)-new Date(a.rt)});
+if(!rq.length){el.innerHTML='<div class="card" style="text-align:center;padding:40px;color:#9ca3af"><div style="font-size:40px">✅</div>暂无修改申请</div>';return}
+var h='<div class="card">';
+rq.forEach(function(r){var st=gS(r.si),tp=TP[aTP(r.ai)];
+h+='<div style="padding:14px;border:1px solid #e5e7eb;border-radius:9px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><div><strong>'+H(st?st.n:'?')+'</strong>（'+r.si+'）· <span class="typ '+tp.c+'">'+tp.s+'</span> '+H(aN(r.ai))+'</div>'+(r.sd==='pending'?'<span class="bdg bdg-p">待处理</span>':r.sd==='approved'?'<span class="bdg bdg-g">已通过</span>':'<span class="bdg bdg-l">已拒绝</span>')+'</div><div style="font-size:12px;color:#9ca3af;margin-bottom:6px">'+fmt(r.rt)+'</div><div class="fb">'+H(r.rs)+'</div>'+(r.sd==='pending'?'<div style="display:flex;gap:7px;margin-top:10px"><button class="btn bs bs2" onclick="apprMR(\''+r.i+'\')">✅同意</button><button class="btn bd bs2" onclick="rejMR(\''+r.i+'\')">❌拒绝</button></div>':'')+'</div>';
+});
+h+='</div>';el.innerHTML=h;
+}
+function renderStu(){
+var el=document.getElementById('atc');
+var h='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="font-weight:600">学生管理（'+DB.sts.length+'人）</div><button class="btn bp bs2" onclick="openAddStu()">＋添加</button></div><table><thead><tr><th>学号</th><th>姓名</th><th>助教</th><th>已交</th><th>操作</th></tr></thead><tbody>';
+DB.sts.forEach(function(s){var sb=DB.sub.filter(function(x){return x.si===s.i});
+h+='<tr><td><code>'+s.i+'</code></td><td><strong>'+H(s.n)+'</strong></td><td>'+H(tN(s.t))+'</td><td>'+sb.length+'</td><td><button class="btn bo bs2" onclick="openEditStu(\''+s.i+'\')">编辑</button></td></tr>';
+});
+h+='</tbody></table></div>';el.innerHTML=h;
+}
+function showLink(aid){var a=gA(aid),tp=TP[a.tp],lk=location.href.split('?')[0]+'?submit='+aid;
+var m=document.getElementById('mdl');m.className='modal';
+m.innerHTML='<div style="font-size:17px;font-weight:700;margin-bottom:14px">🔗 作业提交链接</div><div style="margin-bottom:14px"><span class="typ '+tp.c+'" style="font-size:13px;padding:4px 12px">'+tp.l+'</span> <strong>'+H(a.ti)+'</strong></div><div class="alert alert-i"><span>ℹ️</span><div>发到学生群，学生点开→登录→自动跳到提交页。</div></div><label class="fl">提交链接（点击复制）</label><div class="link-b" onclick="cpTxt(this.textContent)">'+lk+'</div><div style="font-size:11px;color:#9ca3af;margin-top:4px">👆点击复制</div><label class="fl" style="margin-top:12px">或复制通知文本</label><div class="link-b" onclick="cpTxt(this.textContent)">📝 '+tp.l+'作业：'+a.ti+'\n截止：'+fmt(a.dl)+'\n请点链接登录后提交：\n'+lk+'</div><div style="display:flex;gap:10px;margin-top:14px"><button class="btn bp" style="flex:1" onclick="cpTxt(\''+lk+'\')">复制纯链接</button><button class="btn bo" onclick="cmodal()">关闭</button></div>';
+document.getElementById('mbg').classList.add('show');
+}
+function cpTxt(t){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');var d=document.createElement('div');d.textContent='已复制';d.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:8px 20px;border-radius:7px;font-weight:600;z-index:9999';document.body.appendChild(d);setTimeout(function(){d.remove()},1500)}catch(e){alert('请手动复制')}document.body.removeChild(ta)}
+function openPub(){var m=document.getElementById('mdl');m.className='modal';var d=new Date();d.setDate(d.getDate()+7);
+var opts=Object.keys(TP).map(function(k){var v=TP[k];return '<label style="display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #e5e7eb;border-radius:8px;cursor:pointer;margin-bottom:6px" onclick="document.querySelectorAll(\'input[name=at]\').forEach(function(r){r.checked=false});this.querySelector(\'input\').checked=true"><input type="radio" name="at" value="'+k+'" '+(k==='yingyongwen'?'checked':'')+'><span class="typ '+v.c+'" style="padding:3px 10px">'+v.l+'</span><span style="color:#6b7280;font-size:13px">满分'+v.m+'分</span></label>'}).join('');
+m.innerHTML='<div style="font-size:17px;font-weight:700;margin-bottom:14px">发布新作业</div><label class="fl">作业类型</label>'+opts+'<label class="fl">标题</label><input class="fi" id="nAt" placeholder="如：第3课 · 应用文 — 感谢信"><label class="fl">截止时间</label><input type="datetime-local" class="fi" id="nAd" value="'+d.toISOString().slice(0,16)+'"><div class="alert alert-i"><span>ℹ️</span><div>发布后自动生成提交链接。截止前=正常提交，截止后=补交。</div></div><div style="display:flex;gap:10px"><button class="btn bp" style="flex:1" onclick="doPub()">发布并生成链接</button><button class="btn bo" onclick="cmodal()">取消</button></div>';
+document.getElementById('mbg').classList.add('show');
+}
+function doPub(){var te=document.querySelector('input[name="at"]:checked');var tp=te?te.value:'yingyongwen';var ti=(document.getElementById('nAt').value||'').trim();if(!ti){alert('请输入标题');return}var aid=uid();DB.asg.push({i:aid,tp:tp,ti:ti,dl:document.getElementById('nAd').value,pub:true});svb(DB);cmodal();go();setTimeout(function(){showLink(aid)},200)}
+function openEditA(aid){var a=gA(aid),m=document.getElementById('mdl');m.className='modal';
+m.innerHTML='<div style="font-size:17px;font-weight:700;margin-bottom:14px">编辑作业</div><label class="fl">类型</label><select class="fi" id="eAt">'+Object.keys(TP).map(function(k){var v=TP[k];return '<option value="'+k+'" '+(a.tp===k?'selected':'')+'>'+v.l+'（'+v.m+'分）</option>'}).join('')+'</select><label class="fl">标题</label><input class="fi" id="eTi" value="'+H(a.ti)+'"><label class="fl">截止</label><input type="datetime-local" class="fi" id="eDl" value="'+a.dl+'"><div style="display:flex;gap:10px"><button class="btn bp" style="flex:1" onclick="doEditA(\''+aid+'\')">保存</button><button class="btn bo" onclick="cmodal()">取消</button></div>';
+document.getElementById('mbg').classList.add('show');
+}
+function doEditA(aid){var a=gA(aid);a.tp=document.getElementById('eAt').value;a.ti=(document.getElementById('eTi').value||'').trim();a.dl=document.getElementById('eDl').value;svb(DB);cmodal();go();}
+function openAddStu(){var m=document.getElementById('mdl');m.className='modal';
+m.innerHTML='<div style="font-size:17px;font-weight:700;margin-bottom:14px">添加学生</div><label class="fl">学号</label><input class="fi" id="nSi" placeholder="如 S009"><label class="fl">姓名</label><input class="fi" id="nSn"><label class="fl">助教</label><select class="fi" id="nSt">'+DB.tas.map(function(t){return '<option value="'+t.i+'">'+t.n+'</option>'}).join('')+'</select><div style="display:flex;gap:10px"><button class="btn bp" style="flex:1" onclick="doAddStu()">添加</button><button class="btn bo" onclick="cmodal()">取消</button></div>';
+document.getElementById('mbg').classList.add('show');
+}
+function doAddStu(){var id=(document.getElementById('nSi').value||'').trim().toUpperCase(),nm=(document.getElementById('nSn').value||'').trim();if(!id||!nm){alert('请填写完整');return}if(gS(id)){alert('学号已存在');return}DB.sts.push({i:id,n:nm,t:document.getElementById('nSt').value});svb(DB);cmodal();go();}
+function openEditStu(sid){var s=gS(sid),m=document.getElementById('mdl');m.className='modal';
+m.innerHTML='<div style="font-size:17px;font-weight:700;margin-bottom:14px">编辑学生</div><label class="fl">学号</label><input class="fi" value="'+s.i+'" disabled><label class="fl">姓名</label><input class="fi" id="eSn" value="'+H(s.n)+'"><label class="fl">助教</label><select class="fi" id="eSt">'+DB.tas.map(function(t){return '<option value="'+t.i+'" '+(t.i===s.t?'selected':'')+'>'+t.n+'</option>'}).join('')+'</select><div style="display:flex;gap:10px"><button class="btn bp" style="flex:1" onclick="doEditStu(\''+sid+'\')">保存</button><button class="btn bd" onclick="doDelStu(\''+sid+'\')">删除</button><button class="btn bo" onclick="cmodal()">取消</button></div>';
+document.getElementById('mbg').classList.add('show');
+}
+function doEditStu(sid){var s=gS(sid);s.n=(document.getElementById('eSn').value||'').trim();s.t=document.getElementById('eSt').value;svb(DB);cmodal();go();}
+function doDelStu(sid){if(!confirm('确认删除？'))return;DB.sts=DB.sts.filter(function(s){return s.i!==sid});DB.sub=DB.sub.filter(function(s){return s.si!==sid});svb(DB);cmodal();go();}
+function apprMR(rid){var r=DB.mreq.find(function(x){return x.i===rid});if(!r)return;if(!confirm('同意修改？原提交删除，可重新提交'))return;DB.sub=DB.sub.filter(function(s){return!(s.si===r.si&&s.ai===r.ai)});r.sd='approved';svb(DB);go();}
+function rejMR(rid){var r=DB.mreq.find(function(x){return x.i===rid});if(!r)return;r.sd='rejected';svb(DB);go();}
+
+function cmodal(){document.getElementById('mbg').classList.remove('show');document.getElementById('mdl').className='modal'}
+document.getElementById('mbg').addEventListener('click',function(e){if(e.target===this)cmodal()});
+
+// ===== INIT =====
+var pa=new URLSearchParams(location.search).get('submit');
+if(pa){sessionStorage.setItem('pSub',pa);history.replaceState(null,'',location.pathname)}
+showLogin();
+</script>
+</body>
+</html>
