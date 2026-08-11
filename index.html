@@ -189,7 +189,7 @@ ac.innerHTML=h;
 renderSList();
 }
 function goList(t){stab('list',null);setTimeout(function(){var e=document.getElementById(t==='l'?'sec-l':'sec-n');if(e)e.scrollIntoView({behavior:'smooth'})},50)}
-functionstab=stab;function stab(t,el){
+ function stab(t,el){
 document.querySelectorAll('#stb .tab').forEach(function(x){x.classList.remove('on')});
 if(el)el.classList.add('on');
 if(t==='list')renderSList();else renderSFB();
