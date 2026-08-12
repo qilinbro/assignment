@@ -14,8 +14,8 @@ import type { SubmissionStatus } from "@/types";
 // 模拟数据
 const mockSubmission = {
   id: "submission-1",
-  assignmentId: "assignment-week-1",
-  assignmentTitle: "第一周作业",
+  assignmentId: "assignment-2024-08-01",
+  assignmentTitle: "8月1日作业",
   studentId: "student-1",
   submittedAt: "2024-08-12T14:20:00",
   status: "COMPLETED" as SubmissionStatus,
@@ -148,17 +148,12 @@ export default function StudentAssignmentDetailPage() {
               <div className="space-y-6">
                 {mockFeedback.map((feedback) => (
                   <div key={feedback.id} className="border rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <User className="h-4 w-4" />
-                          <span className="font-medium">{feedback.taName}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">助教</p>
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <User className="h-4 w-4" />
+                        <span className="font-medium">{feedback.taName}</span>
                       </div>
-                      <Badge variant="outline" className="text-lg px-3 py-1">
-                        {feedback.score}/100
-                      </Badge>
+                      <p className="text-sm text-muted-foreground">助教</p>
                     </div>
                     <p className="text-sm mb-3">{feedback.comment}</p>
                     {feedback.requireResubmission && (
@@ -170,16 +165,6 @@ export default function StudentAssignmentDetailPage() {
                     )}
                   </div>
                 ))}
-
-                {/* Average Score */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">平均分</span>
-                    <Badge variant="default" className="text-lg px-3 py-1">
-                      {(mockFeedback.reduce((acc, f) => acc + f.score, 0) / mockFeedback.length).toFixed(1)}/100
-                    </Badge>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>

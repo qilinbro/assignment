@@ -6,7 +6,6 @@ import { ArrowLeft, Download, Star, Upload, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePreview } from "@/components/submission/image-preview";
 import { FileUpload } from "@/components/submission/file-upload";
@@ -25,8 +24,8 @@ import { format } from "date-fns";
 // 模拟数据
 const mockSubmission = {
   id: "submission-3",
-  assignmentId: "assignment-week-1",
-  assignmentTitle: "第一周作业",
+  assignmentId: "assignment-2024-08-01",
+  assignmentTitle: "8月1日作业",
   studentId: "student-3",
   studentName: "学生C",
   submittedAt: "2024-08-12T15:00:00",
@@ -55,20 +54,18 @@ export default function TAGradingPage() {
   const params = useParams();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [score, setScore] = React.useState("");
   const [comment, setComment] = React.useState("");
   const [requireResubmission, setRequireResubmission] = React.useState(false);
   const [feedbackFiles, setFeedbackFiles] = React.useState<File[]>([]);
 
   const handleApplyAIAnalysis = (analysis: AIAnalysisResult) => {
-    setScore(analysis.suggestedScore.toString());
     setComment(analysis.suggestedComments);
     setRequireResubmission(analysis.requiresResubmission);
   };
 
   const handleSubmit = async () => {
-    if (!score && !comment.trim()) {
-      alert("请填写分数或评语");
+    if (!comment.trim()) {
+      alert("请填写评语");
       return;
     }
 
@@ -79,7 +76,6 @@ export default function TAGradingPage() {
 
     console.log("Submitting grading:", {
       submissionAssignmentId: params.id,
-      score: parseInt(score) || undefined,
       comment,
       requireResubmission,
       feedbackFiles: feedbackFiles.length,
@@ -156,7 +152,7 @@ export default function TAGradingPage() {
                 <ul className="space-y-2">
                   <li>• 仔细审阅所有上传的文件</li>
                   <li>• 提供具体、建设性的反馈</li>
-                  <li>• 按作业标准公正评分</li>
+                  <li>• 按作业标准客观评判</li>
                   <li>• 仅在确有必要时才要求重新提交</li>
                 </ul>
               </CardContent>
@@ -169,40 +165,10 @@ export default function TAGradingPage() {
               <CardHeader>
                 <CardTitle>提交批改</CardTitle>
                 <CardDescription>
-                  填写分数、评语并上传反馈文件
+                  填写评语并上传反馈文件
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Score */}
-                <div className="space-y-2">
-                  <Label htmlFor="score">分数（0-100）</Label>
-                  <div className="flex items-center gap-4">
-                    <Input
-                      id="score"
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="请输入分数"
-                      value={score}
-                      onChange={(e) => setScore(e.target.value)}
-                      className="max-w-32"
-                    />
-                    <div className="flex gap-1">
-                      {[0, 25, 50, 75, 100].map((preset) => (
-                        <Button
-                          key={preset}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setScore(preset.toString())}
-                        >
-                          {preset}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
                 {/* Comments */}
                 <div className="space-y-2">
                   <Label htmlFor="comment">批改评语</Label>
@@ -271,28 +237,6 @@ export default function TAGradingPage() {
                     <Save className="h-4 w-4 mr-2" />
                     {isSubmitting ? "提交中..." : "提交批改"}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Score Buttons */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">快速评分</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-5 gap-2">
-                  {Array.from({ length: 21 }, (_, i) => i * 5).map((value) => (
-                    <Button
-                      key={value}
-                      type="button"
-                      variant={score === value.toString() ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setScore(value.toString())}
-                    >
-                      {value}
-                    </Button>
-                  ))}
                 </div>
               </CardContent>
             </Card>

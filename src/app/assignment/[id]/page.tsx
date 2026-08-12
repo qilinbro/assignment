@@ -12,8 +12,8 @@ import { format } from "date-fns";
 
 // 模拟作业数据 - 实际应用中应来自 API
 const mockAssignment = {
-  id: "assignment-week-1",
-  title: "第一周作业",
+  id: "assignment-2024-08-01",
+  title: "8月1日作业",
   description: `请完成以下练习：
 
 1. 阅读第一章并回答理解性问题
@@ -262,14 +262,11 @@ export default function AssignmentPage() {
                 <div className="space-y-6">
                   {/* TA 1 Feedback */}
                   <div className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="mb-3">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
                         <span className="font-medium">助教01</span>
                       </div>
-                      <Badge variant="outline" className="text-green-600 border-green-600">
-                        分数：85
-                      </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
                       第 1 题解答正确。第 2、3 题请修改，使表达更清晰。
@@ -281,14 +278,11 @@ export default function AssignmentPage() {
 
                   {/* TA 2 Feedback */}
                   <div className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="mb-3">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
                         <span className="font-medium">助教03</span>
                       </div>
-                      <Badge variant="outline" className="text-green-600 border-green-600">
-                        分数：90
-                      </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       整体表现不错。解释清晰，答案结构合理。

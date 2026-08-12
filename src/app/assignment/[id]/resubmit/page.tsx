@@ -15,8 +15,8 @@ import type { SubmissionStatus } from "@/types";
 
 // 模拟数据
 const mockAssignment = {
-  id: "assignment-week-1",
-  title: "第一周作业",
+  id: "assignment-2024-08-01",
+  title: "8月1日作业",
   allowResubmission: true,
   resubmissionDescription: "请说明你根据助教反馈做了哪些修改",
   deadline: "2026-08-20T23:59:59",

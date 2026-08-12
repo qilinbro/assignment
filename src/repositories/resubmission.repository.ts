@@ -17,39 +17,7 @@ export interface IResubmissionRepository {
 class MockResubmissionRepository implements IResubmissionRepository {
   private resubmissions: Map<string, Resubmission> = new Map();
 
-  constructor() {
-    this.initializeMockData();
-  }
-
-  private initializeMockData() {
-    // Create some mock resubmissions
-    const resubmission1: Resubmission = {
-      id: "resubmission-1",
-      submissionId: "submission-2",
-      studentId: "student-2",
-      reason:
-        "我已根据助教的反馈修改了第 2、3 题，并补充了更详细的解释。",
-      files: [
-        {
-          id: "resub-file-1",
-          url: "/uploads/student-4-app.png",
-          fileName: "应用文（修改后）.png",
-          fileType: "image/png",
-          size: 1407208,
-        },
-        {
-          id: "resub-file-2",
-          url: "/uploads/student-4-read.png",
-          fileName: "读后续（修改后）.png",
-          fileType: "image/png",
-          size: 1487015,
-        },
-      ],
-      createdAt: new Date("2024-08-12T18:00:00"),
-    };
-
-    this.resubmissions.set(resubmission1.id, resubmission1);
-  }
+  // No mock data - starting with empty repository
 
   async findById(id: string): Promise<Resubmission | null> {
     return this.resubmissions.get(id) || null;

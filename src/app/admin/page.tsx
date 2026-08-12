@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 // 模拟数据 - 实际应用中应来自 API
 const mockAssignments = [
   {
-    id: "assignment-week-1",
-    title: "第一周作业",
+    id: "assignment-2024-08-01",
+    title: "8月1日作业",
     deadline: "2026-08-20T23:59:59",
     totalSubmissions: 86,
     completedGrading: 62,
@@ -20,8 +20,8 @@ const mockAssignments = [
     gradingProgress: 72,
   },
   {
-    id: "assignment-week-2",
-    title: "第二周作业",
+    id: "assignment-2024-08-08",
+    title: "8月8日作业",
     deadline: "2026-09-01T23:59:59",
     totalSubmissions: 93,
     completedGrading: 38,
@@ -30,8 +30,8 @@ const mockAssignments = [
     gradingProgress: 41,
   },
   {
-    id: "assignment-week-3",
-    title: "第三周作业",
+    id: "assignment-2024-08-12",
+    title: "8月12日作业",
     deadline: "2026-08-15T23:59:59",
     totalSubmissions: 45,
     completedGrading: 12,
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span>学生A 提交了 第一周作业</span>
+                  <span>学生A 提交了 8月1日作业</span>
                   <span className="text-muted-foreground ml-auto">2 分钟前</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">

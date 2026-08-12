@@ -128,7 +128,7 @@ export default function CreateAssignmentPage() {
                   <Input
                     id="title"
                     name="title"
-                    placeholder="例如：第三周作业"
+                    placeholder="例如：8月12日作业"
                     required
                   />
                 </div>

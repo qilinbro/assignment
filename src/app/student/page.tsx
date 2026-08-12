@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { BookOpen, Clock, CheckCircle, AlertCircle, TrendingUp } from "lucide-react";
+import { BookOpen, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,8 +17,8 @@ const mockStudentName = "学生A";
 const mockSubmissions = [
   {
     id: "submission-1",
-    assignmentId: "assignment-week-1",
-    assignmentTitle: "第一周作业",
+    assignmentId: "assignment-2024-08-01",
+    assignmentTitle: "8月1日作业",
     assignmentDeadline: "2026-08-20T23:59:59",
     status: "COMPLETED" as SubmissionStatus,
     submittedAt: "2024-08-12T14:20:00",
@@ -28,8 +28,8 @@ const mockSubmissions = [
   },
   {
     id: "submission-2",
-    assignmentId: "assignment-week-2",
-    assignmentTitle: "第二周作业",
+    assignmentId: "assignment-2024-08-08",
+    assignmentTitle: "8月8日作业",
     assignmentDeadline: "2026-09-01T23:59:59",
     status: "RESUBMISSION_REQUIRED" as SubmissionStatus,
     submittedAt: "2024-08-12T14:35:00",
@@ -39,8 +39,8 @@ const mockSubmissions = [
   },
   {
     id: "submission-3",
-    assignmentId: "assignment-week-3",
-    assignmentTitle: "第三周作业",
+    assignmentId: "assignment-2024-08-12",
+    assignmentTitle: "8月12日作业",
     assignmentDeadline: "2026-08-15T23:59:59",
     status: "GRADING" as SubmissionStatus,
     submittedAt: "2024-08-12T15:00:00",
@@ -110,7 +110,7 @@ export default function StudentDashboard() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-3">
               <CardDescription>作业总数</CardDescription>
@@ -146,19 +146,6 @@ export default function StudentDashboard() {
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1" />
                 等待反馈
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>平均分</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.averageScore}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                已完成作业的平均分
               </div>
             </CardContent>
           </Card>
@@ -230,15 +217,9 @@ export default function StudentDashboard() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 text-sm">
                         {submission.hasFeedback ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">分数：</span>
-                            <Badge variant="outline" className="font-semibold">
-                              {submission.averageScore}/100
-                            </Badge>
-                            <span className="text-muted-foreground">
-                              （{submission.feedbackCount} 名助教）
-                            </span>
-                          </div>
+                          <span className="text-muted-foreground text-sm">
+                            已收到 {submission.feedbackCount} 名助教的反馈
+                          </span>
                         ) : (
                           <span className="text-muted-foreground text-sm">
                             暂无反馈

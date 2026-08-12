@@ -17,8 +17,8 @@ const mockTAName = "助教01";
 const mockAssignments = [
   {
     id: "sa-5",
-    assignmentTitle: "第一周作业",
-    assignmentId: "assignment-week-1",
+    assignmentTitle: "8月1日作业",
+    assignmentId: "assignment-2024-08-01",
     studentId: "student-3",
     studentName: "学生C",
     submittedAt: "2024-08-12T15:00:00",
@@ -27,8 +27,8 @@ const mockAssignments = [
   },
   {
     id: "sa-1",
-    assignmentTitle: "第一周作业",
-    assignmentId: "assignment-week-1",
+    assignmentTitle: "8月1日作业",
+    assignmentId: "assignment-2024-08-01",
     studentId: "student-1",
     studentName: "学生A",
     submittedAt: "2024-08-12T14:20:00",
@@ -37,8 +37,8 @@ const mockAssignments = [
   },
   {
     id: "sa-2",
-    assignmentTitle: "第一周作业",
-    assignmentId: "assignment-week-1",
+    assignmentTitle: "8月1日作业",
+    assignmentId: "assignment-2024-08-01",
     studentId: "student-1",
     studentName: "学生A",
     submittedAt: "2024-08-12T14:20:00",
@@ -47,8 +47,8 @@ const mockAssignments = [
   },
   {
     id: "sa-6",
-    assignmentTitle: "第一周作业",
-    assignmentId: "assignment-week-1",
+    assignmentTitle: "8月1日作业",
+    assignmentId: "assignment-2024-08-01",
     studentId: "student-3",
     studentName: "学生C",
     submittedAt: "2024-08-12T15:00:00",
