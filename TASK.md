@@ -2,35 +2,37 @@
 
 ## 🚀 部署状态
 
-### 生产环境（已完成 - 2026年8月12日）
+### 生产环境（2026年8月13日更新）
 
 | 项目 | 状态 | 详情 |
 |------|------|------|
 | **服务器** | ✅ 运行中 | 腾讯云 2H4G (43.163.222.31) |
 | **应用访问** | ✅ HTTPS | https://assignment.kirinbao.top |
-| **数据库** | ✅ 已配置 | PostgreSQL 15 (独立数据库: `assignment`) |
-| **SSL 证书** | ✅ 有效 | Let's Encrypt (有效期至 2026-11-10) |
-| **反向代理** | ✅ 运行中 | nginx (端口 80/443) |
-| **应用运行** | ✅ 正常 | Next.js (端口 3000) |
+| **数据库** | ✅ 已配置 | PostgreSQL 16（docker-compose `db` 容器） |
+| **对象存储** | ✅ 已接入 | Cloudflare R2 |
+| **AI 模型** | ✅ 已接入 | GLM-4V 视觉模型 |
+| **SSL 证书** | ✅ 有效 | Let's Encrypt（openresty 反代） |
+| **反向代理** | ✅ 运行中 | openresty (端口 80/443) → 容器 3000 |
+| **应用运行** | ✅ 正常 | Next.js（docker-compose `app` 容器） |
 
 ### 📊 部署详情
 
 **服务器信息**
 - 主机: 43.163.222.31
 - 配置: 2核4G
-- 系统: Ubuntu (Docker 运行环境)
+- 系统: Ubuntu（Docker 运行环境）
 
-**应用配置**
-- 应用目录: `/home/ubuntu/apps/assignment`
+**应用配置（全容器化）**
+- 编排: `docker-compose.yml`（app + db + 持久卷）
 - 内部端口: 3000
-- 外部端口: 443 (HTTPS)
-- 进程管理: PM2 + systemd
+- 外部端口: 443 (HTTPS)，由 openresty 反代到 3000
+- 持久化: `pgdata` 卷（数据库）、`uploads` 卷（上传文件）
 
 **数据库配置**
-- 类型: PostgreSQL 15
-- 容器: `new-api-2-postgres`
+- 类型: PostgreSQL 16
+- 容器: `assignment-db`
 - 数据库名: `assignment`
-- 用户名: `newapi`
+- 用户名: `assignment`
 
 **访问地址**
 ```
@@ -43,6 +45,8 @@ https://assignment.kirinbao.top/api/assignments
 https://assignment.kirinbao.top/api/submissions
 https://assignment.kirinbao.top/api/feedback
 https://assignment.kirinbao.top/api/allocation
+https://assignment.kirinbao.top/api/ai/analyze   # GLM-4V 作业分析
+https://assignment.kirinbao.top/api/upload       # R2 文件上传
 ```
 
 ---
@@ -411,20 +415,19 @@ async validateSubmission(assignmentId: string): Promise<{
 
 **注意**：若作业允许，重交可在截止时间后进行。
 
-### 5. 认证服务 (`auth.service.ts`)
+### 5. 认证服务 (`auth/`)
 
 **用途**：提供系统登录、登出、当前用户查询和基于角色的访问控制。
 
-**当前实现**：认证服务通过统一的 `AuthService` 接口管理系统账号和登录状态，便于后续接入统一身份认证或第三方身份提供商。
+**当前实现（已完成）**：
+- 密码用 `bcryptjs` 哈希存储
+- 登录成功后写入 `httpOnly` cookie 的 session（`SESSION_SECRET` 签名）
+- 首次登录强制改密（`User.mustChangePassword` 标志）
+- 当前用户通过 `src/lib/auth/current-user.ts` 在服务端组件 / API 路由中读取
+- RBAC：所有页面与 API 路由均做服务端角色校验
 
-**可扩展集成**：
+**核心接口**：
 ```typescript
-// 可按部署需求接入：
-// - NextAuth.js
-// - Clerk
-// - Auth0
-// - 自定义 JWT 实现
-
 interface AuthService {
   login(credentials: LoginCredentials): Promise<AuthUser | null>;
   logout(): Promise<void>;
@@ -439,23 +442,28 @@ interface AuthService {
 
 **用途**：提供 AI 驱动的评分辅助，包括提交分析、评分建议和反馈生成。
 
-**当前实现**：AI 助手通过 `AIGradingAssistant` 接口提供结构化分析结果，默认使用应用内的分析策略；部署环境可通过配置接入 Claude API 等外部模型服务。
+**当前实现（已完成）**：已接入 **GLM-4V 视觉模型**（智谱 AI），通过 `GLM_API_KEY` / `GLM_BASE_URL` / `GLM_MODEL` 环境变量配置。AI 直接读取学生上传的作业图片，返回结构化分析。
 
-**外部模型集成示例**：
+**API 端点**：
+- `POST /api/ai/analyze` —— 分析作业图片（优缺点、建议评分）
+- `POST /api/ai/chat` —— 关于本次提交的对话问答
+- `POST /api/ai/feedback` —— 生成评语建议
+
+**调用流程**：
 ```typescript
-class ClaudeAIAssistantService implements AIGradingAssistant {
-  async analyzeSubmission(request: AIAnalysisRequest): Promise<AIAnalysisResult> {
-    // 调用 Claude API 处理提交内容
-    // 返回带分数、反馈的结构化分析
-  }
-}
+// 1. 从 R2 读取学生作业图片
+// 2. 以图片 + prompt 调用 GLM-4V
+// 3. 返回结构化分析（优点 / 缺点 / 建议评分 / 置信度）
+// 4. 助教可在批改界面参考，也可一键生成评语
 ```
+
+**容错**：AI 调用失败时降级为提示，不影响助教手动批改流程。
 
 **AI 功能**：
 - 提交分析（优缺点）
 - 建议评分及置信度
 - 关于提交的聊天界面
-- 多提交对比
+- 评语一键生成
 
 ---
 
@@ -744,12 +752,18 @@ src/components/
 ### 前置要求
 - Node.js 18+
 - npm 或 yarn
+- PostgreSQL 实例（可用仓库自带 docker-compose 启动）
+- Cloudflare R2 存储桶（用于作业图片存储）
+- GLM API Key（智谱 AI，用于 GLM-4V 视觉分析）
 
 ### 开发环境设置
 ```bash
 git clone https://github.com/qilinbro/assignment
 cd assignment
 npm install
+cp .env.example .env   # 填入下面的环境变量
+npx prisma db push     # 建表
+npm run db:seed        # 写入种子账号（aloy / T01-T50 / S001-S500）
 npm run dev
 ```
 
@@ -759,48 +773,42 @@ npm run build
 npm start
 ```
 
+### Docker 一键部署
+```bash
+docker compose up -d --build   # 启动 app + db
+```
+
 ### 环境变量
 ```env
-# 可选：用于真实认证
-NEXTAUTH_URL="https://your-domain.com"
-NEXTAUTH_SECRET="your-secret"
+# 数据库
+DATABASE_URL=postgresql://assignment:密码@localhost:5432/assignment?schema=public
 
-# 可选：用于 AI 集成
-ANTHROPIC_API_KEY="your-api-key"
+# Session 签名密钥
+SESSION_SECRET=随机长字符串
 
-# 可选：用于文件存储
-AWS_S3_BUCKET="your-bucket"
-AWS_ACCESS_KEY="your-key"
-AWS_SECRET_KEY="your-secret"
+# Cloudflare R2（对象存储）
+R2_ENDPOINT=https://<accountid>.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=你的 key
+R2_SECRET_ACCESS_KEY=你的 secret
+R2_BUCKET=assignment
+
+# GLM-4V 视觉模型
+GLM_API_KEY=你的 key
+GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+GLM_MODEL=glm-4v
 ```
 
-### 数据库迁移路径
+### 数据模型
 
-1. **安装 ORM**
-```bash
-npm install prisma @prisma/client
-```
+数据层使用 Prisma ORM + PostgreSQL，schema 定义在 `prisma/schema.prisma`，包含以下模型：
+- `User`（账号 / 角色 / bcrypt 密码 / 首登改密标志）
+- `Assignment`（作业）
+- `Submission` + `SubmissionFile`（学生提交及文件）
+- `SubmissionAssignment`（TA 分配记录）
+- `Feedback` + `FeedbackFile`（批改反馈及附件）
+- `Resubmission` + `ResubmissionFile`（重新提交）
 
-2. **替换仓储**
-```typescript
-// src/repositories/user.repository.ts
-class PrismaUserRepository implements IUserRepository {
-  async findById(id: string) {
-    return await prisma.user.findUnique({ where: { id } });
-  }
-}
-```
-
-3. **更新模式**
-```prisma
-// schema.prisma
-model User {
-  id    String @id @default(uuid())
-  name  String
-  email String @unique
-  role  UserRole
-}
-```
+全部 repository 已基于 Prisma Client 实现，通过 `prisma db push` 建表、`npm run db:seed` 写入种子账号。
 
 ---
 
@@ -808,35 +816,37 @@ model User {
 
 ### 数据库与数据持久化
 - [x] 生产环境 PostgreSQL 数据库
-- [ ] 使用 Prisma ORM 统一数据访问
-- [ ] 完善迁移脚本
-- [ ] 种子数据管理
+- [x] 使用 Prisma ORM 统一数据访问
+- [x] 种子数据管理（`prisma/seed.ts`）
 - [ ] 连接池与故障恢复策略
 
 ### 认证
-- [ ] NextAuth.js 集成
+- [x] bcrypt 密码哈希 + httpOnly cookie session
+- [x] 首次登录强制改密
+- [x] 会话管理（`SESSION_SECRET` 签名）
 - [ ] OAuth 提供商（Google、GitHub）
-- [ ] 会话管理
 - [ ] 密码重置流程
 
 ### 文件存储
-- [ ] AWS S3 集成
-- [ ] Cloudflare R2 支持
+- [x] Cloudflare R2 集成（上传 + 代理访问）
 - [ ] CDN 配置
 - [ ] 文件压缩
 
 ### 增强功能
+- [x] 登录 / 注册
+- [x] 创建 / 编辑 / 删除作业
+- [x] 管理员查看批改详情
+- [x] 重新提交流程
 - [ ] 邮件通知
 - [ ] WebSocket 实时更新
 - [ ] 批量作业操作
 - [ ] 助教绩效分析
 - [ ] 成绩册导出
-- [ ] 移动端响应式优化
 - [ ] 深色模式支持
-- [ ] 多语言支持
 
 ### AI 增强
-- [ ] Claude API 集成
+- [x] GLM-4V 视觉模型集成（作业图片分析 + 评语生成）
+- [x] AI 对话问答（关于本次提交）
 - [ ] OCR 文字提取
 - [ ] 抄袭检测
 - [ ] 自动评分标准应用
@@ -845,18 +855,22 @@ model User {
 
 ## 项目状态
 
-### ✅ 已完成（2026年8月12日）
+### ✅ MVP 阶段（2026年8月12日）
 
-**阶段 1-10**：完整 MVP 实现，包括：
-- 完整的类型系统
-- Repository 数据访问层
-- 所有业务逻辑服务
-- 认证与授权
-- 截止时间强制执行
-- UI 组件
-- 所有页面和路由
-- RESTful API 端点
-- 生产就绪构建
+阶段 1-10：完整 MVP 实现，包括类型系统、Repository 数据访问层、业务逻辑服务、认证授权、截止时间强制执行、UI 组件、页面路由、RESTful API。
+
+### ✅ 全栈重构（2026年8月13日）
+
+- 数据层：全部 repository 重写为 Prisma（PostgreSQL）
+- 认证：bcrypt + httpOnly cookie session + 首登强制改密
+- 用户：seed 551 账号（aloy / T01-T50 / S001-S500）
+- 存储：Cloudflare R2 图床（上传 / 代理访问）
+- AI：GLM-4V 视觉模型分析作业图片 + 自动评语
+- 部署：Docker 全容器化（docker-compose：app + db + volume）
+- 域名：assignment.kirinbao.top（openresty 反代 + HTTPS）
+- UI：现代书卷风（暖纸色系 + Lora 衬线 + 动画）
+- 功能：登录注册 / 创建编辑删除作业 / 提交批改 / 重新提交 / 管理员看批改详情
+- 修复：状态转换 / TA 分配外键 / NaN 进度 / 客户端崩溃 / AI 错误处理
 
 ### MVP 测试用例 ✅
 
@@ -877,4 +891,4 @@ model User {
 
 ---
 
-*最后更新：2026年8月12日*
+*最后更新：2026年8月13日*
