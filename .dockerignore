@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.zcode
+*.tar.gz
+bonus1（1-16）
+/assignment
+Dockerfile
+docker-compose.yml
+.dockerignore
+.gitignore
+README.md
+TASK.md

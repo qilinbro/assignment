@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16
+    container_name: assignment-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: assignment
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: assignment
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # 不映射宿主端口：仅供 app 通过容器网络访问（更安全）
+
+  app:
+    build: .
+    container_name: assignment-app
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://assignment:${DB_PASSWORD}@db:5432/assignment?schema=public
+      SESSION_SECRET: ${SESSION_SECRET}
+      NODE_ENV: production
+    ports:
+      - "3000:3000" # 外网访问 http://<服务器IP>:3000
+
+volumes:
+  pgdata:
