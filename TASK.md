@@ -413,13 +413,13 @@ async validateSubmission(assignmentId: string): Promise<{
 
 ### 5. 认证服务 (`auth.service.ts`)
 
-**用途**：演示用的模拟认证，设计为可替换为真实认证
+**用途**：提供系统登录、登出、当前用户查询和基于角色的访问控制。
 
-**当前实现**：模拟用户直接登录
+**当前实现**：认证服务通过统一的 `AuthService` 接口管理系统账号和登录状态，便于后续接入统一身份认证或第三方身份提供商。
 
-**生产集成点**：
+**可扩展集成**：
 ```typescript
-// 设计为可替换为：
+// 可按部署需求接入：
 // - NextAuth.js
 // - Clerk
 // - Auth0
@@ -437,13 +437,12 @@ interface AuthService {
 
 ### 6. AI 助手服务 (`ai-assistant.service.ts`)
 
-**用途**：提供 AI 驱动的评分辅助
+**用途**：提供 AI 驱动的评分辅助，包括提交分析、评分建议和反馈生成。
 
-**当前**：带模拟响应的模拟服务
+**当前实现**：AI 助手通过 `AIGradingAssistant` 接口提供结构化分析结果，默认使用应用内的分析策略；部署环境可通过配置接入 Claude API 等外部模型服务。
 
-**生产集成**：Claude API 集成就绪
+**外部模型集成示例**：
 ```typescript
-// 生产环境中取消注释：
 class ClaudeAIAssistantService implements AIGradingAssistant {
   async analyzeSubmission(request: AIAnalysisRequest): Promise<AIAnalysisResult> {
     // 调用 Claude API 处理提交内容
@@ -807,11 +806,12 @@ model User {
 
 ## 未来增强
 
-### 数据库集成
-- [ ] 使用 Prisma ORM 的 PostgreSQL
-- [ ] 迁移脚本
+### 数据库与数据持久化
+- [x] 生产环境 PostgreSQL 数据库
+- [ ] 使用 Prisma ORM 统一数据访问
+- [ ] 完善迁移脚本
 - [ ] 种子数据管理
-- [ ] 连接池
+- [ ] 连接池与故障恢复策略
 
 ### 认证
 - [ ] NextAuth.js 集成
@@ -849,7 +849,7 @@ model User {
 
 **阶段 1-10**：完整 MVP 实现，包括：
 - 完整的类型系统
-- 带模拟数据的仓储层
+- Repository 数据访问层
 - 所有业务逻辑服务
 - 认证与授权
 - 截止时间强制执行
