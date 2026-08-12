@@ -34,14 +34,38 @@ export default function TAGradingPage() {
   const [feedbackFiles, setFeedbackFiles] = React.useState<File[]>([]);
 
   React.useEffect(() => {
-    // TODO: Fetch submission data from API
-    // const fetchData = async () => {
-    //   const response = await fetch(`/api/submissions/${params.id}`);
-    //   const data = await response.json();
-    //   setSubmission(data);
-    //   setLoading(false);
-    // };
-    setLoading(false);
+    const fetchData = async () => {
+      try {
+        const [taRes, assignRes] = await Promise.all([
+          fetch("/api/ta/assignments"),
+          fetch("/api/assignments"),
+        ]);
+        const taList = taRes.ok ? await taRes.json() : [];
+        const assignList = assignRes.ok ? await assignRes.json() : [];
+
+        const item = (Array.isArray(taList) ? taList : []).find(
+          (a: any) => a.id === params.id
+        );
+        if (item && item.submission) {
+          const assignment = assignList.find(
+            (a: any) => a.id === item.submission.assignmentId
+          );
+          setSubmission({
+            id: item.submission.id,
+            files: item.submission.files || [],
+            submittedAt: item.submission.submittedAt,
+            studentId: item.submission.studentId,
+            studentName: `学生 ${item.submission.studentId?.slice(-6) || ""}`,
+            assignmentTitle: assignment?.title || "作业",
+            assignmentId: item.submission.assignmentId,
+            taAssignmentId: item.id,
+            status: item.status,
+          });
+        }
+      } catch {}
+      setLoading(false);
+    };
+    fetchData();
   }, [params.id]);
 
   const handleApplyAIAnalysis = (analysis: AIAnalysisResult) => {
@@ -54,19 +78,31 @@ export default function TAGradingPage() {
       alert("请填写评语");
       return;
     }
-
     setIsSubmitting(true);
-
-    // TODO: Upload feedback files and submit grading via API
-    console.log("Submitting grading:", {
-      submissionAssignmentId: params.id,
-      comment,
-      requireResubmission,
-      feedbackFiles: feedbackFiles.length,
-    });
-
-    setIsSubmitting(false);
-    router.push("/ta");
+    try {
+      // 上传反馈文件（如果有）
+      const files = [];
+      for (const file of feedbackFiles) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const upRes = await fetch("/api/upload", { method: "POST", body: fd });
+        const upData = await upRes.json();
+        if (!upRes.ok) throw new Error(upData.error || "上传失败");
+        files.push({ url: upData.url, fileName: upData.fileName, fileType: upData.fileType, size: upData.size });
+      }
+      // 提交批改
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ submissionAssignmentId: params.id, comment, requireResubmission, files }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "批改失败");
+      router.push("/ta");
+    } catch (e: any) {
+      alert(e.message || "批改失败");
+      setIsSubmitting(false);
+    }
   };
 
   const handleDownload = async () => {

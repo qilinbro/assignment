@@ -18,21 +18,34 @@ export default function AssignmentPage() {
   const [submission, setSubmission] = React.useState<any>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
+  const [feedbackList, setFeedbackList] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    // TODO: Fetch assignment data from API
-    // const fetchData = async () => {
-    //   const [assignmentRes, submissionRes] = await Promise.all([
-    //     fetch(`/api/assignments/${params.id}`),
-    //     fetch(`/api/submissions/by-assignment/${params.id}`)
-    //   ]);
-    //   const assignmentData = await assignmentRes.json();
-    //   const submissionData = await submissionRes.json();
-    //   setAssignment(assignmentData);
-    //   setSubmission(submissionData);
-    //   setLoading(false);
-    // };
-    setLoading(false);
+    const fetchData = async () => {
+      try {
+        // 获取作业详情
+        const assignRes = await fetch(`/api/assignments/${params.id}`);
+        if (assignRes.ok) setAssignment(await assignRes.json());
+
+        // 获取当前学生的提交记录，找到这份作业的提交
+        const subRes = await fetch("/api/submissions");
+        const allSubs = await subRes.json();
+        const mySub = (Array.isArray(allSubs) ? allSubs : []).find(
+          (s: any) => s.assignmentId === params.id
+        );
+        if (mySub) {
+          setSubmission(mySub);
+          // 如果有提交，获取批改反馈
+          const fbRes = await fetch(`/api/feedback?submissionId=${mySub.id}`);
+          if (fbRes.ok) {
+            const fb = await fbRes.json();
+            setFeedbackList(Array.isArray(fb) ? fb : []);
+          }
+        }
+      } catch {}
+      setLoading(false);
+    };
+    fetchData();
   }, [params.id]);
 
   const handleSubmit = async () => {
@@ -40,14 +53,30 @@ export default function AssignmentPage() {
       alert("请至少上传一个文件");
       return;
     }
-
     setIsSubmitting(true);
-
-    // TODO: Upload files and create submission via API
-    // 1. Upload files to storage
-    // 2. Create submission with file URLs
-    // 3. Update UI state
-
+    try {
+      // 上传文件到服务器
+      const files = [];
+      for (const file of uploadedFiles) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const upRes = await fetch("/api/upload", { method: "POST", body: fd });
+        const upData = await upRes.json();
+        if (!upRes.ok) throw new Error(upData.error || "上传失败");
+        files.push({ url: upData.url, fileName: upData.fileName, fileType: upData.fileType, size: upData.size });
+      }
+      // 创建提交
+      const subRes = await fetch("/api/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignmentId: params.id, files }),
+      });
+      const subData = await subRes.json();
+      if (!subRes.ok) throw new Error(subData.error || "提交失败");
+      setSubmission(subData);
+    } catch (e: any) {
+      alert(e.message || "提交失败");
+    }
     setIsSubmitting(false);
   };
 
@@ -193,6 +222,51 @@ export default function AssignmentPage() {
                     </p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 批改结果（学生查看助教评语） */}
+          {hasSubmitted && feedbackList.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>批改结果</CardTitle>
+                <CardDescription>{feedbackList.length} 名助教的评语</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {feedbackList.map((fb, i) => (
+                    <div key={fb.id || i} className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">助教 {i + 1}</span>
+                        {fb.requireResubmission && (
+                          <Badge variant="destructive" className="text-xs">需要重新提交</Badge>
+                        )}
+                      </div>
+                      {fb.comment && (
+                        <p className="text-sm whitespace-pre-line">{fb.comment}</p>
+                      )}
+                      {fb.createdAt && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {format(new Date(fb.createdAt), "yyyy年MM月dd日 HH:mm")}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 已提交但未批改 */}
+          {hasSubmitted && feedbackList.length === 0 && submission?.status !== "COMPLETED" && (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  作业已提交，等待助教批改中…
+                </p>
               </CardContent>
             </Card>
           )}

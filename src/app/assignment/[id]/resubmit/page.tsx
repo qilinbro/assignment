@@ -34,22 +34,46 @@ export default function ResubmissionPage() {
       alert("请至少上传一个文件");
       return;
     }
-
     if (!resubmissionReason.trim()) {
       alert("请填写重新提交的原因");
       return;
     }
-
     setIsSubmitting(true);
-
-    // TODO: Submit resubmission via API
-    console.log("Resubmission data:", {
-      files: uploadedFiles,
-      reason: resubmissionReason,
-    });
-
-    setIsSubmitting(false);
-    router.push(`/assignment/${params.id}`);
+    try {
+      // 获取当前学生的提交记录，找到 submissionId
+      const mySubsRes = await fetch("/api/submissions");
+      const mySubs = await mySubsRes.json();
+      const mySub = (Array.isArray(mySubs) ? mySubs : []).find(
+        (s: any) => s.assignmentId === params.id
+      );
+      if (!mySub) {
+        alert("找不到原始提交记录");
+        setIsSubmitting(false);
+        return;
+      }
+      // 上传文件
+      const files = [];
+      for (const file of uploadedFiles) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const upRes = await fetch("/api/upload", { method: "POST", body: fd });
+        const upData = await upRes.json();
+        if (!upRes.ok) throw new Error(upData.error || "上传失败");
+        files.push({ url: upData.url, fileName: upData.fileName, fileType: upData.fileType, size: upData.size });
+      }
+      // 创建重新提交
+      const res = await fetch("/api/resubmissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ submissionId: mySub.id, reason: resubmissionReason, files }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "重新提交失败");
+      router.push(`/assignment/${params.id}`);
+    } catch (e: any) {
+      alert(e.message || "重新提交失败");
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {

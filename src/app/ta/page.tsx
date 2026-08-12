@@ -26,9 +26,11 @@ export default function TADashboard() {
   const [assignments, setAssignments] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    // TODO: Fetch from API - /api/ta/assignments
-    // For now, show empty state
-    setLoading(false);
+    fetch("/api/ta/assignments")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setAssignments(Array.isArray(d) ? d : []))
+      .catch(() => setAssignments([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const stats = {
@@ -151,11 +153,15 @@ export default function TADashboard() {
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
-                            <span className="font-medium">{assignment.studentName}</span>
+                            <span className="font-medium">
+                              学生 {assignment.submission?.studentId?.slice(-6) || "未知"}
+                            </span>
                             <StatusBadge status={assignment.status} />
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            提交于 {format(new Date(assignment.submittedAt), "MM月dd日 HH:mm")}
+                            {assignment.submission?.submittedAt
+                              ? `提交于 ${format(new Date(assignment.submission.submittedAt), "MM月dd日 HH:mm")}`
+                              : "提交时间未知"}
                           </p>
                         </div>
                         <Link href={`/ta/assignments/${assignment.id}`}>
@@ -191,11 +197,15 @@ export default function TADashboard() {
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
-                            <span className="font-medium">{assignment.studentName}</span>
+                            <span className="font-medium">
+                              学生 {assignment.submission?.studentId?.slice(-6) || "未知"}
+                            </span>
                             <StatusBadge status={assignment.status} />
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            批改于 {format(new Date(assignment.submittedAt), "MM月dd日 HH:mm")}
+                            {assignment.submission?.submittedAt
+                              ? `批改于 ${format(new Date(assignment.submission.submittedAt), "MM月dd日 HH:mm")}`
+                              : "时间未知"}
                           </p>
                         </div>
                         <div className="flex gap-2">

@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/db";
+import type { Assignment as PrismaAssignment } from "@prisma/client";
 import {
   Assignment,
   CreateAssignmentData,
@@ -15,69 +17,99 @@ export interface IAssignmentRepository {
   getStatistics(id: string): Promise<AssignmentStatistics | null>;
 }
 
-class MockAssignmentRepository implements IAssignmentRepository {
-  private assignments: Map<string, Assignment> = new Map();
+function toDomain(a: PrismaAssignment): Assignment {
+  return {
+    id: a.id,
+    title: a.title,
+    description: a.description ?? undefined,
+    deadline: a.deadline,
+    taIds: a.taIds,
+    taCount: a.taCount,
+    allowResubmission: a.allowResubmission,
+    resubmissionDescription: a.resubmissionDescription ?? undefined,
+    createdBy: a.createdById,
+    createdAt: a.createdAt,
+  };
+}
 
-  // No mock data - starting with empty repository
-
+class PrismaAssignmentRepository implements IAssignmentRepository {
   async findById(id: string): Promise<Assignment | null> {
-    return this.assignments.get(id) || null;
+    const a = await prisma.assignment.findUnique({ where: { id } });
+    return a ? toDomain(a) : null;
   }
 
   async findAll(): Promise<Assignment[]> {
-    return Array.from(this.assignments.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
+    const list = await prisma.assignment.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return list.map(toDomain);
   }
 
   async findByCreatedBy(createdBy: string): Promise<Assignment[]> {
-    return Array.from(this.assignments.values())
-      .filter((a) => a.createdBy === createdBy)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const list = await prisma.assignment.findMany({
+      where: { createdById: createdBy },
+      orderBy: { createdAt: "desc" },
+    });
+    return list.map(toDomain);
   }
 
   async create(data: CreateAssignmentData): Promise<Assignment> {
-    const newAssignment: Assignment = {
-      id: `assignment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      ...data,
-      createdAt: new Date(),
-    };
-    this.assignments.set(newAssignment.id, newAssignment);
-    return newAssignment;
+    const a = await prisma.assignment.create({
+      data: {
+        title: data.title,
+        description: data.description ?? null,
+        deadline: data.deadline,
+        taIds: data.taIds,
+        taCount: data.taCount,
+        allowResubmission: data.allowResubmission,
+        resubmissionDescription: data.resubmissionDescription ?? null,
+        createdById: data.createdBy,
+      },
+    });
+    return toDomain(a);
   }
 
-  async update(
-    id: string,
-    data: UpdateAssignmentData
-  ): Promise<Assignment | null> {
-    const assignment = this.assignments.get(id);
-    if (!assignment) {
+  async update(id: string, data: UpdateAssignmentData): Promise<Assignment | null> {
+    try {
+      const a = await prisma.assignment.update({
+        where: { id },
+        data: {
+          ...(data.title !== undefined && { title: data.title }),
+          ...(data.description !== undefined && { description: data.description }),
+          ...(data.deadline !== undefined && { deadline: data.deadline }),
+          ...(data.taIds !== undefined && { taIds: data.taIds }),
+          ...(data.taCount !== undefined && { taCount: data.taCount }),
+          ...(data.allowResubmission !== undefined && { allowResubmission: data.allowResubmission }),
+          ...(data.resubmissionDescription !== undefined && {
+            resubmissionDescription: data.resubmissionDescription,
+          }),
+        },
+      });
+      return toDomain(a);
+    } catch {
       return null;
     }
-
-    const updatedAssignment: Assignment = {
-      ...assignment,
-      ...data,
-    };
-    this.assignments.set(id, updatedAssignment);
-    return updatedAssignment;
   }
 
   async delete(id: string): Promise<boolean> {
-    return this.assignments.delete(id);
+    try {
+      await prisma.assignment.delete({ where: { id } });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async getStatistics(id: string): Promise<AssignmentStatistics | null> {
-    const assignment = this.assignments.get(id);
-    if (!assignment) {
-      return null;
-    }
-
-    // This will be populated by the submission repository
+    const a = await prisma.assignment.findUnique({ where: { id } });
+    if (!a) return null;
+    const totalSubmissions = await prisma.submission.count({
+      where: { assignmentId: id },
+    });
     return {
       id,
-      title: assignment.title,
-      totalSubmissions: 0,
+      title: a.title,
+      totalSubmissions,
       completedGrading: 0,
       pendingGrading: 0,
       resubmissions: 0,
@@ -86,4 +118,4 @@ class MockAssignmentRepository implements IAssignmentRepository {
   }
 }
 
-export const assignmentRepository = new MockAssignmentRepository();
+export const assignmentRepository = new PrismaAssignmentRepository();

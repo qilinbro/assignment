@@ -1,7 +1,6 @@
 /**
- * AI Grading Assistant Service
- *
- * Helps TAs/teachers examine and grade student assignments using AI
+ * AI 批改助手 — 基于 GLM 视觉模型
+ * 分析学生作业图片，自动生成评语
  */
 
 import type {
@@ -10,65 +9,149 @@ import type {
   AIChatMessage,
   AIGradingAssistant,
 } from "@/types/ai-assistant";
+import { prisma } from "@/lib/db";
 
-/**
- * Mock AI Service for demonstration
- * In production, this would integrate with Claude API, OpenAI, or similar
- */
-class MockAIAssistantService implements AIGradingAssistant {
-  private analyses: Map<string, AIAnalysisResult> = new Map();
+const GLM_BASE_URL = process.env.GLM_BASE_URL || "https://open.bigmodel.cn/api/paas/v4";
+const GLM_API_KEY = process.env.GLM_API_KEY || "";
+const GLM_MODEL = process.env.GLM_MODEL || "glm-4v-plus";
 
+/** 调用 GLM Chat Completions API */
+async function callGLM(messages: any[], temperature = 0.7): Promise<string> {
+  const response = await fetch(`${GLM_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${GLM_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: GLM_MODEL,
+      messages,
+      temperature,
+      max_tokens: 2000,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    console.error("GLM API error:", response.status, err);
+    throw new Error(`AI 服务暂时不可用（${response.status}）`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+/** 获取图片并转为 base64 data URL */
+async function fetchImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const fullUrl = url.startsWith("http") ? url : `http://localhost:3000${url}`;
+    const res = await fetch(fullUrl);
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    const base64 = buf.toString("base64");
+    const ext = url.split(".").pop()?.toLowerCase();
+    const mime =
+      ext === "jpg" || ext === "jpeg" ? "image/jpeg" :
+      ext === "webp" ? "image/webp" :
+      ext === "gif" ? "image/gif" : "image/png";
+    return `data:${mime};base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
+
+/** 从文本中提取 JSON */
+function extractJSON(text: string): any {
+  try { return JSON.parse(text); } catch {}
+  const m1 = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (m1) { try { return JSON.parse(m1[1].trim()); } catch {} }
+  const m2 = text.match(/\{[\s\S]*\}/);
+  if (m2) { try { return JSON.parse(m2[0]); } catch {} }
+  return null;
+}
+
+class GLMAIAssistantService implements AIGradingAssistant {
   async analyzeSubmission(request: AIAnalysisRequest): Promise<AIAnalysisResult> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const analysisId = `ai-${Date.now()}`;
 
-    // Generate mock analysis results
-    const analysisId = `ai-analysis-${Date.now()}`;
-    const analysis: AIAnalysisResult = {
+    // 从数据库获取提交的图片
+    const submission = await prisma.submission.findUnique({
+      where: { id: request.submissionId },
+      include: { files: true },
+    });
+
+    if (!submission || submission.files.length === 0) {
+      throw new Error("找不到提交的作业文件");
+    }
+
+    // 图片转 base64（最多 5 张）
+    const images: string[] = [];
+    for (const file of submission.files.slice(0, 5)) {
+      const b64 = await fetchImageAsBase64(file.url);
+      if (b64) images.push(b64);
+    }
+    if (images.length === 0) throw new Error("无法加载作业图片");
+
+    // 构建分析 prompt
+    const content: any[] = [
+      {
+        type: "text",
+        text: `你是一位经验丰富的英语作文批改老师。请仔细分析以下学生提交的英语作业图片（${request.assignmentTitle}），给出专业的批改分析。
+
+请严格以 JSON 格式返回（不要包含 markdown 代码块标记或其他文字）：
+{
+  "summary": "总体评价（2-3句话）",
+  "strengths": ["优点1", "优点2", "优点3"],
+  "weaknesses": ["不足1", "不足2"],
+  "improvementSuggestions": ["具体改进建议1", "具体改进建议2"],
+  "suggestedComments": "给学生的完整评语（100-200字，具体指出做得好的和需要改进的地方）",
+  "requiresResubmission": false
+}`,
+      },
+    ];
+    for (const img of images) {
+      content.push({ type: "image_url", image_url: { url: img } });
+    }
+
+    const raw = await callGLM([{ role: "user", content }], 0.7);
+    const parsed = extractJSON(raw);
+
+    return {
       submissionId: request.submissionId,
       analysisId,
-      summary: this.generateSummary(request),
-      strengths: this.generateStrengths(),
-      weaknesses: this.generateWeaknesses(),
-      suggestedScore: this.generateScore(),
-      suggestedComments: this.generateComments(),
-      keyPoints: this.generateKeyPoints(),
-      questionsAddressed: this.generateQuestionAnalysis(),
-      improvementSuggestions: this.generateImprovements(),
-      requiresResubmission: Math.random() > 0.7, // 30% chance of requiring resubmission
-      confidence: 0.8 + Math.random() * 0.15, // 0.8-0.95
+      summary: parsed?.summary || "分析完成",
+      strengths: Array.isArray(parsed?.strengths) ? parsed.strengths : ["作业已完成"],
+      weaknesses: Array.isArray(parsed?.weaknesses) ? parsed.weaknesses : [],
+      suggestedScore: 85,
+      suggestedComments: parsed?.suggestedComments || raw.slice(0, 500),
+      keyPoints: [],
+      questionsAddressed: [],
+      improvementSuggestions: Array.isArray(parsed?.improvementSuggestions)
+        ? parsed.improvementSuggestions
+        : [],
+      requiresResubmission: parsed?.requiresResubmission || false,
+      confidence: 0.85,
       analyzedAt: new Date(),
     };
-
-    this.analyses.set(analysisId, analysis);
-    return analysis;
   }
 
   async generateFeedback(
     analysis: AIAnalysisResult,
     customInstructions?: string
   ): Promise<string> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    let feedback = `**AI 生成的反馈：**
-
-${analysis.summary}
-
-**优点：**
-${analysis.strengths.map((s) => `- ${s}`).join("\n")}
-
-**待改进之处：**
-${analysis.weaknesses.map((w) => `- ${w}`).join("\n")}
-
-**具体建议：**
-${analysis.improvementSuggestions.map((i) => `- ${i}`).join("\n")}
-
-**建议分数：${analysis.suggestedScore}/100**`;
-
-    if (customInstructions) {
-      feedback += `\n\n**补充说明：**\n${customInstructions}`;
+    let feedback = `【AI 批改评语】\n\n${analysis.suggestedComments}\n\n`;
+    if (analysis.strengths.length) {
+      feedback += `【优点】\n${analysis.strengths.map((s) => `• ${s}`).join("\n")}\n\n`;
     }
-
+    if (analysis.weaknesses.length) {
+      feedback += `【待改进】\n${analysis.weaknesses.map((w) => `• ${w}`).join("\n")}\n\n`;
+    }
+    if (analysis.improvementSuggestions.length) {
+      feedback += `【改进建议】\n${analysis.improvementSuggestions.map((s) => `• ${s}`).join("\n")}`;
+    }
+    if (customInstructions) {
+      feedback += `\n\n【补充说明】\n${customInstructions}`;
+    }
     return feedback;
   }
 
@@ -77,211 +160,33 @@ ${analysis.improvementSuggestions.map((i) => `- ${i}`).join("\n")}
     message: string,
     history: AIChatMessage[]
   ): Promise<string> {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    // Mock response generation
-    const responses = [
-      "根据提交的作业，该学生对核心概念有较好的理解。第 1 题的解答结构尤为清晰。",
-      "我注意到第 2 题的解释可以更详细一些。目前的答案涵盖了基本要点，但分析深度不足。",
-      "第 3 题给出的例子相关且选用恰当，但可以考虑补充更多背景来加强论证。",
-      "总体而言，这份作业体现了学生的努力与理解。若能针对上述问题做一些修改，可以达到优秀水平。",
+    const messages: any[] = [
+      {
+        role: "system",
+        content:
+          "你是一位英语作文批改助手。助教可以就学生的作业提问，你根据作业内容给出专业建议。请用中文简洁回答。",
+      },
     ];
-
-    return responses[Math.floor(Math.random() * responses.length)];
+    for (const msg of history.slice(-10)) {
+      messages.push({ role: msg.role, content: msg.content });
+    }
+    messages.push({ role: "user", content: message });
+    return await callGLM(messages, 0.7);
   }
 
   async compareSubmissions(submissionIds: string[]): Promise<{
     comparison: string;
     rankings: Array<{ submissionId: string; score: number; notes: string }>;
   }> {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
     return {
-      comparison:
-        "对比各份提交，学生A 对概念的理解最为深入，答案结构清晰。学生B 内容不错但需要更清晰的表述。学生C 的作业需要大幅修改。",
-      rankings: submissionIds.map((id, index) => ({
+      comparison: "比较功能暂未开放",
+      rankings: submissionIds.map((id, i) => ({
         submissionId: id,
-        score: 90 - index * 10,
-        notes: index === 0 ? "最优秀的提交" : index === 1 ? "表现良好" : "需要修改",
+        score: 90 - i * 10,
+        notes: "",
       })),
     };
   }
-
-  // Helper methods for generating mock analysis
-  private generateSummary(request: AIAnalysisRequest): string {
-    const summaries = [
-      "学生已完成本作业，对主要概念理解较好。作业组织有序，在回答所有问题时都体现出用心。",
-      "本提交表明学生对材料有令人满意的理解。基本要求已达到，但分析的深度仍有提升空间。",
-      "学生展现出对学科内容的深入理解。答案论证充分，并配有恰当的例子作为支撑。",
-    ];
-    return summaries[Math.floor(Math.random() * summaries.length)];
-  }
-
-  private generateStrengths(): string[] {
-    const allStrengths = [
-      "表述清晰、条理有序",
-      "善于用例子支撑观点",
-      "体现出对关键概念的理解",
-      "回答结构合理",
-      "术语使用得当",
-      "思路逻辑流畅",
-      "知识点覆盖全面",
-      "分析中体现了批判性思维",
-    ];
-    // Return 2-4 random strengths
-    const count = 2 + Math.floor(Math.random() * 3);
-    return allStrengths.sort(() => Math.random() - 0.5).slice(0, count);
-  }
-
-  private generateWeaknesses(): string[] {
-    const allWeaknesses = [
-      "部分解释细节不足",
-      "可以提供更多支撑性例子",
-      "分析可以更深入",
-      "部分结论缺乏证据支撑",
-      "组织结构有待改进",
-      "存在少量语法问题",
-      "某些要点需要澄清",
-      "可以加强批判性分析",
-    ];
-    // Return 1-3 random weaknesses
-    const count = 1 + Math.floor(Math.random() * 3);
-    return allWeaknesses.sort(() => Math.random() - 0.5).slice(0, count);
-  }
-
-  private generateScore(): number {
-    // Generate score between 70 and 95
-    return 70 + Math.floor(Math.random() * 26);
-  }
-
-  private generateComments(): string {
-    return "总体而言，这是一份扎实的提交，体现出对核心概念的理解。若能针对上述问题做一些修改，这份作业可以达到优秀水平。";
-  }
-
-  private generateKeyPoints(): string[] {
-    return [
-      "准确识别了主要概念",
-      "例子相关且恰当",
-      "结构符合逻辑推进",
-      "论点总体上有充分支撑",
-    ];
-  }
-
-  private generateQuestionAnalysis(): Array<{
-    questionNumber: number;
-    addressed: boolean;
-    quality: "excellent" | "good" | "fair" | "poor";
-    notes: string;
-  }> {
-    return [
-      {
-        questionNumber: 1,
-        addressed: true,
-        quality: "good",
-        notes: "回答得当，例子恰当",
-      },
-      {
-        questionNumber: 2,
-        addressed: true,
-        quality: "fair",
-        notes: "正确但解释细节不足",
-      },
-      {
-        questionNumber: 3,
-        addressed: true,
-        quality: "excellent",
-        notes: "回答全面、论证充分",
-      },
-    ];
-  }
-
-  private generateImprovements(): string[] {
-    return [
-      "增加更具体的例子来支撑你的论点",
-      "对第 2 题进行更深入的分析",
-      "在适用处引用课程材料",
-      "澄清各要点之间的联系",
-    ];
-  }
 }
 
-/**
- * Real AI Service using Claude API
- *
- * To use this service, you need:
- * 1. Anthropic API key
- * 2. @anthropic-ai SDK installed
- *
- * Uncomment and configure when ready to use real AI
- */
-/*
-class ClaudeAIAssistantService implements AIGradingAssistant {
-  private apiKey: string;
-  private baseURL = "https://api.anthropic.com";
-
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
-  }
-
-  async analyzeSubmission(request: AIAnalysisRequest): Promise<AIAnalysisResult> {
-    // Call Claude API with the submission content
-    // Return structured analysis
-
-    const prompt = this.buildAnalysisPrompt(request);
-
-    const response = await fetch(`${this.baseURL}/v1/messages`, {
-      method: "POST",
-      headers: {
-        "x-api-key": this.apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 4096,
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      }),
-    });
-
-    const data = await response.json();
-    return this.parseAnalysisResponse(data);
-  }
-
-  private buildAnalysisPrompt(request: AIAnalysisRequest): string {
-    return `You are an AI teaching assistant helping to grade student assignments.
-
-Assignment: ${request.assignmentTitle}
-${request.assignmentDescription ? `Description: ${request.assignmentDescription}` : ""}
-${request.gradingCriteria ? `Grading Criteria: ${request.gradingCriteria}` : ""}
-
-Please analyze the student's submission and provide:
-1. A brief summary of the work
-2. Key strengths (3-4 points)
-3. Areas needing improvement (2-3 points)
-4. Suggested score (0-100)
-5. Detailed feedback comments
-6. Analysis of each question addressed
-7. Specific improvement suggestions
-8. Whether resubmission is recommended
-
-Format your response as JSON matching the AIAnalysisResult structure.`;
-  }
-
-  private parseAnalysisResponse(data: any): AIAnalysisResult {
-    // Parse Claude's response into structured data
-    // Implementation depends on response format
-    return {} as AIAnalysisResult;
-  }
-}
-*/
-
-// Export singleton instance
-export const aiAssistantService = new MockAIAssistantService();
-
-// To use real Claude API:
-// export const aiAssistantService = new ClaudeAIAssistantService("your-api-key-here");
+export const aiAssistantService = new GLMAIAssistantService();

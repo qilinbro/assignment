@@ -21,8 +21,18 @@ services:
       DATABASE_URL: postgresql://assignment:${DB_PASSWORD}@db:5432/assignment?schema=public
       SESSION_SECRET: ${SESSION_SECRET}
       NODE_ENV: production
+      R2_ENDPOINT: ${R2_ENDPOINT}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_BUCKET: ${R2_BUCKET}
+      GLM_API_KEY: ${GLM_API_KEY}
+      GLM_BASE_URL: ${GLM_BASE_URL}
+      GLM_MODEL: ${GLM_MODEL}
     ports:
-      - "3000:3000" # 外网访问 http://<服务器IP>:3000
+      - "3000:3000"
+    volumes:
+      - uploads:/app/public/uploads # 上传文件持久化（容器重启不丢）
 
 volumes:
   pgdata:
+  uploads:

@@ -13,7 +13,7 @@ import { roleHomePath } from "@/lib/auth/auth-storage";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, refresh } = useAuth();
   const [pw, setPw] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [error, setError] = React.useState("");
@@ -43,19 +43,20 @@ export default function ChangePasswordPage() {
       setError(data.error || "修改失败");
       return;
     }
-    // 改密成功，进入对应控制台
+    // 改密成功：刷新用户状态（mustChangePassword → false），再进入控制台
+    await refresh();
     if (user) router.push(roleHomePath(user.role));
     else router.push("/login");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <header className="border-b bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+    <div className="min-h-screen paper-texture" style={{ background: "linear-gradient(160deg, hsl(38 35% 97%) 0%, hsl(35 25% 95%) 50%, hsl(243 20% 96%) 100%)" }}>
+      <header className="border-b border-border/50 backdrop-blur-sm" style={{ background: "hsl(40 50% 99% / 0.6)" }}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <BookOpen className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold">作业管理系统</h1>
+              <h1 className="text-2xl font-bold">批改坞</h1>
             </div>
             <Link href="/login">
               <Button variant="outline">

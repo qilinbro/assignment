@@ -132,6 +132,12 @@ class SubmissionService implements ISubmissionService {
     };
 
     const currentStatus = submission.status;
+
+    // 状态相同则无需转换（如多 TA 批改时 GRADING → GRADING）
+    if (currentStatus === status) {
+      return submission;
+    }
+
     const allowedStatuses = validTransitions[currentStatus];
 
     if (!allowedStatuses.includes(status)) {

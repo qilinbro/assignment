@@ -1,8 +1,6 @@
-import {
-  Resubmission,
-  CreateResubmissionData,
-  ResubmissionWithDetails,
-} from "@/types";
+import { prisma } from "@/lib/db";
+import type { Resubmission as PrismaResubmission } from "@prisma/client";
+import { Resubmission, CreateResubmissionData } from "@/types";
 
 export interface IResubmissionRepository {
   findById(id: string): Promise<Resubmission | null>;
@@ -14,58 +12,96 @@ export interface IResubmissionRepository {
   findAll(): Promise<Resubmission[]>;
 }
 
-class MockResubmissionRepository implements IResubmissionRepository {
-  private resubmissions: Map<string, Resubmission> = new Map();
+function toDomain(r: PrismaResubmission): Resubmission {
+  return {
+    id: r.id,
+    submissionId: r.submissionId,
+    studentId: r.studentId,
+    reason: r.reason,
+    createdAt: r.createdAt,
+    files: r.files.map((f) => ({
+      id: f.id,
+      url: f.url,
+      fileName: f.fileName,
+      fileType: f.fileType,
+      size: f.size,
+    })),
+  };
+}
 
-  // No mock data - starting with empty repository
-
+class PrismaResubmissionRepository implements IResubmissionRepository {
   async findById(id: string): Promise<Resubmission | null> {
-    return this.resubmissions.get(id) || null;
+    const r = await prisma.resubmission.findUnique({
+      where: { id },
+      include: { files: true },
+    });
+    return r ? toDomain(r) : null;
   }
 
-  async findBySubmissionId(
-    submissionId: string
-  ): Promise<Resubmission[]> {
-    return Array.from(this.resubmissions.values())
-      .filter((r) => r.submissionId === submissionId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  async findBySubmissionId(submissionId: string): Promise<Resubmission[]> {
+    const list = await prisma.resubmission.findMany({
+      where: { submissionId },
+      include: { files: true },
+      orderBy: { createdAt: "desc" },
+    });
+    return list.map(toDomain);
   }
 
   async findByStudentId(studentId: string): Promise<Resubmission[]> {
-    return Array.from(this.resubmissions.values())
-      .filter((r) => r.studentId === studentId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const list = await prisma.resubmission.findMany({
+      where: { studentId },
+      include: { files: true },
+      orderBy: { createdAt: "desc" },
+    });
+    return list.map(toDomain);
   }
 
   async findByAssignmentId(assignmentId: string): Promise<Resubmission[]> {
-    // This would require joining with submissions
-    // For now, return all resubmissions
-    return Array.from(this.resubmissions.values());
-  }
-
-  async findAll(): Promise<Resubmission[]> {
-    return Array.from(this.resubmissions.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
+    // 正确联表：resubmission -> submission -> assignment
+    const list = await prisma.resubmission.findMany({
+      where: { submission: { assignmentId } },
+      include: { files: true },
+      orderBy: { createdAt: "desc" },
+    });
+    return list.map(toDomain);
   }
 
   async create(data: CreateResubmissionData): Promise<Resubmission> {
-    const newResubmission: Resubmission = {
-      id: `resubmission-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      ...data,
-      files: data.files.map((file) => ({
-        ...file,
-        id: `resub-file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      })),
-      createdAt: new Date(),
-    };
-    this.resubmissions.set(newResubmission.id, newResubmission);
-    return newResubmission;
+    const r = await prisma.resubmission.create({
+      data: {
+        submissionId: data.submissionId,
+        studentId: data.studentId,
+        reason: data.reason,
+        files: {
+          create: data.files.map((f) => ({
+            url: f.url,
+            fileName: f.fileName,
+            fileType: f.fileType,
+            size: f.size,
+          })),
+        },
+      },
+      include: { files: true },
+    });
+    return toDomain(r);
   }
 
   async delete(id: string): Promise<boolean> {
-    return this.resubmissions.delete(id);
+    try {
+      await prisma.resubmission.delete({ where: { id } });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async findAll(): Promise<Resubmission[]> {
+    const list = await prisma.resubmission.findMany({
+      include: { files: true },
+      orderBy: { createdAt: "desc" },
+    });
+    return list.map(toDomain);
   }
 }
 
-export const resubmissionRepository = new MockResubmissionRepository();
+export const resubmissionRepository = new PrismaResubmissionRepository();

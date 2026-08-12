@@ -21,6 +21,7 @@ interface AuthContextValue {
     role: "STUDENT" | "TA";
   }) => Promise<{ ok: boolean; error?: string; user?: AuthUser }>;
   logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = React.createContext<AuthContextValue | undefined>(undefined);
@@ -80,9 +81,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const refresh = React.useCallback(async () => {
+    const u = await fetchMe();
+    setUser(u);
+  }, []);
+
   const value = React.useMemo<AuthContextValue>(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout]
+    () => ({ user, loading, login, register, logout, refresh }),
+    [user, loading, login, register, logout, refresh]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

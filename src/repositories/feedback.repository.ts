@@ -1,8 +1,6 @@
-import {
-  Feedback,
-  CreateFeedbackData,
-  FeedbackWithDetails,
-} from "@/types";
+import { prisma } from "@/lib/db";
+import type { Feedback as PrismaFeedback } from "@prisma/client";
+import { Feedback, CreateFeedbackData } from "@/types";
 
 export interface IFeedbackRepository {
   findById(id: string): Promise<Feedback | null>;
@@ -13,63 +11,102 @@ export interface IFeedbackRepository {
   findBySubmissionId(submissionId: string): Promise<Feedback[]>;
 }
 
-class MockFeedbackRepository implements IFeedbackRepository {
-  private feedback: Map<string, Feedback> = new Map();
+function toDomain(f: PrismaFeedback): Feedback {
+  return {
+    id: f.id,
+    submissionAssignmentId: f.submissionAssignmentId,
+    score: f.score ?? undefined,
+    comment: f.comment ?? undefined,
+    requireResubmission: f.requireResubmission,
+    createdAt: f.createdAt,
+    files: f.files.map((file) => ({
+      id: file.id,
+      url: file.url,
+      fileName: file.fileName,
+      fileType: file.fileType,
+      size: file.size,
+    })),
+  };
+}
 
-  // No mock data - starting with empty repository
-
+class PrismaFeedbackRepository implements IFeedbackRepository {
   async findById(id: string): Promise<Feedback | null> {
-    return this.feedback.get(id) || null;
+    const f = await prisma.feedback.findUnique({
+      where: { id },
+      include: { files: true },
+    });
+    return f ? toDomain(f) : null;
   }
 
   async findBySubmissionAssignmentId(
     submissionAssignmentId: string
   ): Promise<Feedback[]> {
-    return Array.from(this.feedback.values()).filter(
-      (f) => f.submissionAssignmentId === submissionAssignmentId
-    );
-  }
-
-  async findBySubmissionId(submissionId: string): Promise<Feedback[]> {
-    // This would need to join with submission assignments
-    // For now, return all feedback (will be filtered by service layer)
-    return Array.from(this.feedback.values());
+    const list = await prisma.feedback.findMany({
+      where: { submissionAssignmentId },
+      include: { files: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return list.map(toDomain);
   }
 
   async create(data: CreateFeedbackData): Promise<Feedback> {
-    const newFeedback: Feedback = {
-      id: `feedback-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      ...data,
-      files: data.files.map((file) => ({
-        ...file,
-        id: `fb-file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      })),
-      createdAt: new Date(),
-    };
-    this.feedback.set(newFeedback.id, newFeedback);
-    return newFeedback;
+    const f = await prisma.feedback.create({
+      data: {
+        submissionAssignmentId: data.submissionAssignmentId,
+        score: data.score ?? null,
+        comment: data.comment ?? null,
+        requireResubmission: data.requireResubmission,
+        files: {
+          create: data.files.map((file) => ({
+            url: file.url,
+            fileName: file.fileName,
+            fileType: file.fileType,
+            size: file.size,
+          })),
+        },
+      },
+      include: { files: true },
+    });
+    return toDomain(f);
   }
 
-  async update(
-    id: string,
-    data: Partial<Feedback>
-  ): Promise<Feedback | null> {
-    const existingFeedback = this.feedback.get(id);
-    if (!existingFeedback) {
+  async update(id: string, data: Partial<Feedback>): Promise<Feedback | null> {
+    try {
+      const f = await prisma.feedback.update({
+        where: { id },
+        data: {
+          ...(data.score !== undefined && { score: data.score }),
+          ...(data.comment !== undefined && { comment: data.comment }),
+          ...(data.requireResubmission !== undefined && {
+            requireResubmission: data.requireResubmission,
+          }),
+        },
+        include: { files: true },
+      });
+      return toDomain(f);
+    } catch {
       return null;
     }
-
-    const updatedFeedback: Feedback = {
-      ...existingFeedback,
-      ...data,
-    };
-    this.feedback.set(id, updatedFeedback);
-    return updatedFeedback;
   }
 
   async delete(id: string): Promise<boolean> {
-    return this.feedback.delete(id);
+    try {
+      await prisma.feedback.delete({ where: { id } });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async findBySubmissionId(submissionId: string): Promise<Feedback[]> {
+    // 正确联表：feedback -> submissionAssignment -> submission
+    const list = await prisma.feedback.findMany({
+      where: { submissionAssignment: { submissionId } },
+      include: { files: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return list.map(toDomain);
   }
 }
 
-export const feedbackRepository = new MockFeedbackRepository();
+export const feedbackRepository = new PrismaFeedbackRepository();

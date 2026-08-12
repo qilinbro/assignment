@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRequireAuth } from "@/lib/auth/use-require-auth";
-import { getAllUsers } from "@/lib/auth/auth-storage";
 
 export default function CreateAssignmentPage() {
   useRequireAuth();
@@ -28,10 +27,14 @@ export default function CreateAssignmentPage() {
   const [selectedTAs, setSelectedTAs] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    // 从 localStorage 获取助教列表
-    const allUsers = getAllUsers();
-    const taUsers = allUsers.filter((u) => u.role === "TA");
-    setTas(taUsers);
+    // 从数据库获取助教列表
+    fetch("/api/users")
+      .then((r) => (r.ok ? r.json() : { users: [] }))
+      .then((d) => {
+        const taUsers = (d.users || []).filter((u: any) => u.role === "TA");
+        setTas(taUsers);
+      })
+      .catch(() => setTas([]));
   }, []);
 
   const toggleTA = (taId: string) => {
@@ -74,8 +77,24 @@ export default function CreateAssignmentPage() {
       return;
     }
 
-    // TODO: Call API to create assignment
-    console.log("Creating assignment:", assignmentData);
+    // 调用 API 创建作业
+    try {
+      const res = await fetch("/api/assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(assignmentData),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "创建失败");
+        setIsSubmitting(false);
+        return;
+      }
+    } catch {
+      alert("网络错误，创建失败");
+      setIsSubmitting(false);
+      return;
+    }
 
     setIsSubmitting(false);
     router.push("/admin");

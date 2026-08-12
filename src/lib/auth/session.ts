@@ -17,7 +17,7 @@ export async function setSession(userId: string): Promise<void> {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 天
+    maxAge: 60 * 60 * 24 * 365, // 365 天（长期记住登录）
   });
 }
 

@@ -81,14 +81,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen paper-texture" style={{ background: "linear-gradient(160deg, hsl(38 35% 97%) 0%, hsl(35 25% 95%) 50%, hsl(243 20% 96%) 100%)" }}>
       {/* Header */}
-      <header className="border-b bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+      <header className="border-b border-border/50 backdrop-blur-sm" style={{ background: "hsl(40 50% 99% / 0.6)" }}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
               <BookOpen className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold">作业管理系统</h1>
+              <h1 className="text-2xl font-bold">批改坞</h1>
             </Link>
             <Link href="/login">
               <Button variant="outline">

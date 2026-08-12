@@ -25,16 +25,30 @@ export default function StudentDashboard() {
 
   const [loading, setLoading] = React.useState(true);
   const [submissions, setSubmissions] = React.useState<any[]>([]);
+  const [assignments, setAssignments] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    // TODO: Fetch from API - /api/student/submissions
-    setLoading(false);
+    // 获取所有已发布的作业
+    fetch("/api/assignments")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setAssignments(Array.isArray(d) ? d : []))
+      .catch(() => setAssignments([]));
+    // 获取学生自己的提交记录
+    fetch("/api/submissions")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setSubmissions(Array.isArray(d) ? d : []))
+      .catch(() => setSubmissions([]))
+      .finally(() => setLoading(false));
   }, []);
 
+  // 按作业 id 查找学生的提交
+  const getSubmissionFor = (assignmentId: string) =>
+    submissions.find((s) => s.assignmentId === assignmentId);
+
   const stats = {
-    totalAssignments: submissions.length,
-    submitted: submissions.filter((s) => s.status !== "NOT_SUBMITTED").length,
-    pendingGrading: submissions.filter((s) => s.status === "GRADING").length,
+    totalAssignments: assignments.length,
+    submitted: submissions.length,
+    pendingGrading: submissions.filter((s) => s.status === "GRADING" || s.status === "PENDING").length,
     completed: submissions.filter((s) => s.status === "COMPLETED").length,
     resubmissionRequired: submissions.filter((s) => s.status === "RESUBMISSION_REQUIRED").length,
   };
@@ -155,77 +169,77 @@ export default function StudentDashboard() {
               </Card>
             )}
 
-            {/* Submissions List */}
+            {/* 作业列表 */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>我的提交</CardTitle>
-                    <CardDescription>跟踪你的作业进度与反馈</CardDescription>
+                    <CardTitle>作业列表</CardTitle>
+                    <CardDescription>查看所有已发布的作业并提交</CardDescription>
                   </div>
-                  <Badge variant="secondary">{submissions.length} 次提交</Badge>
+                  <Badge variant="secondary">{assignments.length} 个作业</Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                {submissions.length === 0 ? (
+                {assignments.length === 0 ? (
                   <div className="text-center py-12">
                     <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">暂无提交</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      你还没有提交任何作业。
-                    </p>
+                    <h3 className="text-lg font-semibold mb-2">暂无作业</h3>
+                    <p className="text-sm text-muted-foreground">老师还没有发布作业。</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {submissions.map((submission) => {
-                      const statusInfo = getSubmissionStatus(submission);
-                      const isPastDeadline = isDeadlinePassed(submission.assignmentDeadline);
-
+                    {assignments.map((assignment) => {
+                      const sub = getSubmissionFor(assignment.id);
+                      const isPast = isDeadlinePassed(assignment.deadline);
                       return (
                         <div
-                          key={submission.id}
+                          key={assignment.id}
                           className="border rounded-lg p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-medium">{submission.assignmentTitle}</h3>
-                                {isPastDeadline && (
+                                <h3 className="font-medium">{assignment.title}</h3>
+                                {isPast && (
                                   <Badge variant="destructive" className="text-xs">
                                     已截止
                                   </Badge>
                                 )}
                               </div>
                               <p className="text-sm text-muted-foreground">
-                                提交于 {format(new Date(submission.submittedAt), "yyyy年MM月dd日 HH:mm")}
+                                截止时间：{format(new Date(assignment.deadline), "yyyy年MM月dd日 HH:mm")}
                               </p>
                             </div>
-                            <StatusBadge status={submission.status} />
+                            {sub ? (
+                              <StatusBadge status={sub.status} />
+                            ) : (
+                              <Badge variant="outline">未提交</Badge>
+                            )}
                           </div>
 
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4 text-sm">
-                              {submission.hasFeedback ? (
-                                <span className="text-muted-foreground text-sm">
-                                  已收到 {submission.feedbackCount} 名助教的反馈
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground text-sm">
-                                  暂无反馈
-                                </span>
-                              )}
+                            <div className="text-sm text-muted-foreground">
+                              {sub
+                                ? `提交于 ${format(new Date(sub.submittedAt), "yyyy年MM月dd日 HH:mm")}`
+                                : "尚未提交"}
                             </div>
 
                             <div className="flex gap-2">
-                              {submission.hasFeedback && (
-                                <Link href={`/assignment/${submission.assignmentId}`}>
+                              {!sub && !isPast && (
+                                <Link href={`/assignment/${assignment.id}`}>
+                                  <Button size="sm">去提交</Button>
+                                </Link>
+                              )}
+                              {sub && (
+                                <Link href={`/assignment/${assignment.id}`}>
                                   <Button variant="outline" size="sm">
-                                    查看反馈
+                                    查看详情
                                   </Button>
                                 </Link>
                               )}
-                              {submission.status === "RESUBMISSION_REQUIRED" && !isPastDeadline && (
-                                <Link href={`/assignment/${submission.assignmentId}/resubmit`}>
+                              {sub?.status === "RESUBMISSION_REQUIRED" && (
+                                <Link href={`/assignment/${assignment.id}/resubmit`}>
                                   <Button size="sm">重新提交</Button>
                                 </Link>
                               )}
@@ -266,13 +280,13 @@ export default function StudentDashboard() {
                   <CardTitle className="text-base">即将到来的截止时间</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  {submissions
-                    .filter((s) => !isDeadlinePassed(s.assignmentDeadline))
-                    .map((submission) => (
-                      <div key={submission.id} className="flex justify-between">
-                        <span>{submission.assignmentTitle}</span>
+                  {assignments
+                    .filter((a) => !isDeadlinePassed(a.deadline))
+                    .map((assignment) => (
+                      <div key={assignment.id} className="flex justify-between">
+                        <span>{assignment.title}</span>
                         <span className="text-muted-foreground">
-                          {format(new Date(submission.assignmentDeadline), "MM月dd日")}
+                          {format(new Date(assignment.deadline), "MM月dd日")}
                         </span>
                       </div>
                     ))}

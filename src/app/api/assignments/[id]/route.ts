@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assignmentService } from "@/lib/assignment";
+import { prisma } from "@/lib/db";
 
 // GET /api/assignments/:id - Get assignment details
 export async function GET(
@@ -70,14 +71,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const deleted = await assignmentService.deleteAssignment(id);
-
-    if (!deleted) {
-      return NextResponse.json(
-        { error: "未找到作业" },
-        { status: 404 }
-      );
-    }
+    // 级联删除作业 + 所有关联数据（提交、批改、重新提交等）
+    await prisma.assignment.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

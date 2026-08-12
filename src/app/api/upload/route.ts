@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { r2, R2_BUCKET } from "@/lib/r2";
 
 /**
- * POST /api/upload - Upload file to server storage
- *
- * Uploads a file to the server's public/uploads directory
- * and returns the accessible URL
+ * POST /api/upload - 上传文件到 Cloudflare R2
  */
 export async function POST(request: NextRequest) {
   try {
@@ -15,13 +11,10 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json(
-        { error: "没有提供文件" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "没有提供文件" }, { status: 400 });
     }
 
-    // Validate file type (only images)
+    // 校验文件类型（仅图片）
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -30,35 +23,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: "文件过大，最大允许10MB" },
-        { status: 400 }
-      );
+    // 校验文件大小（最大 10MB）
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: "文件过大，最大允许10MB" }, { status: 400 });
     }
 
-    // Generate unique filename
+    // 生成唯一文件名
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 11);
     const extension = file.name.split(".").pop();
     const fileName = `${timestamp}-${random}.${extension}`;
 
-    // Ensure uploads directory exists
-    const uploadsDir = join(process.cwd(), "public", "uploads");
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Convert file to buffer and save
+    // 上传到 R2
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filePath = join(uploadsDir, fileName);
-    await writeFile(filePath, buffer);
 
-    // Return the URL
-    const url = `/uploads/${fileName}`;
+    await r2.send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: fileName,
+        Body: buffer,
+        ContentType: file.type,
+      })
+    );
+
+    // 返回代理访问 URL（通过应用代理，无需 R2 公开访问）
+    const url = `/api/file/${fileName}`;
 
     return NextResponse.json({
       success: true,
@@ -69,61 +59,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json(
-      { error: "上传失败" },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * DELETE /api/upload - Delete a file
- *
- * Deletes a file from the server's uploads directory
- */
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const filePath = searchParams.get("path");
-
-    if (!filePath) {
-      return NextResponse.json(
-        { error: "缺少文件路径" },
-        { status: 400 }
-      );
-    }
-
-    // Security: Only allow deleting from uploads directory
-    if (!filePath.startsWith("/uploads/")) {
-      return NextResponse.json(
-        { error: "无效的文件路径" },
-        { status: 400 }
-      );
-    }
-
-    const fullPath = join(process.cwd(), "public", filePath);
-
-    // Check if file exists
-    if (!existsSync(fullPath)) {
-      return NextResponse.json(
-        { error: "文件不存在" },
-        { status: 404 }
-      );
-    }
-
-    // Import unlink dynamically to avoid issues
-    const { unlink } = require("fs/promises");
-    await unlink(fullPath);
-
-    return NextResponse.json({
-      success: true,
-      message: "文件已删除",
-    });
-  } catch (error) {
-    console.error("Delete error:", error);
-    return NextResponse.json(
-      { error: "删除失败" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "上传失败" }, { status: 500 });
   }
 }

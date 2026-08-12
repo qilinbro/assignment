@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { submissionRepository } from "@/repositories";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
 // GET /api/ta/assignments - Get TA's grading tasks
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const taId = searchParams.get("taId") || "ta-1"; // In a real app, this would come from auth
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 });
+    }
+    const taId = currentUser.id;
 
     const assignments = await submissionRepository.findAssignmentsByTaId(taId);
 

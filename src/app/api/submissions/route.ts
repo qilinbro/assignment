@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { submissionService } from "@/lib/submission";
 import { CreateSubmissionData } from "@/types";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
 // POST /api/submissions - Create a new submission
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 });
+    }
 
     const submissionData: CreateSubmissionData = {
       assignmentId: body.assignmentId,
-      studentId: body.studentId || "student-1", // In a real app, this would come from auth
+      studentId: currentUser.id,
       files: body.files,
     };
 
@@ -39,6 +44,13 @@ export async function GET(request: NextRequest) {
 
     if (assignmentId) {
       const submissions = await submissionService.getSubmissionsByAssignment(assignmentId);
+      return NextResponse.json(submissions);
+    }
+
+    // 无参数时，返回当前登录学生的提交
+    const me = await getCurrentUser();
+    if (me) {
+      const submissions = await submissionService.getSubmissionsByStudent(me.id);
       return NextResponse.json(submissions);
     }
 

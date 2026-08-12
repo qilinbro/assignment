@@ -44,7 +44,7 @@ model Assignment {
 model Submission {
   id           String   @id @default(cuid())
   assignmentId String
-  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   studentId    String
   student      User     @relation(fields: [studentId], references: [id])
   status       String // PENDING | GRADING | COMPLETED | RESUBMISSION_REQUIRED | RESUBMITTED

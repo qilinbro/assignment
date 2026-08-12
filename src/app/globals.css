@@ -1,51 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --background: 38 30% 98%;
+    --foreground: 220 25% 12%;
+    --card: 40 50% 99.5%;
+    --card-foreground: 220 25% 12%;
+    --popover: 40 50% 99.5%;
+    --popover-foreground: 220 25% 12%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 20% 92%;
+    --secondary-foreground: 220 25% 18%;
+    --muted: 35 15% 93%;
+    --muted-foreground: 220 10% 42%;
+    --accent: 35 75% 48%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 35 15% 88%;
+    --input: 35 15% 88%;
+    --ring: 243 75% 59%;
+    --radius: 0.625rem;
+    --font-heading: "Lora", "Noto Serif SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, sans-serif;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background: 222 25% 8%;
+    --foreground: 38 20% 92%;
+    --card: 222 22% 11%;
+    --card-foreground: 38 20% 92%;
+    --popover: 222 22% 11%;
+    --popover-foreground: 38 20% 92%;
+    --primary: 243 80% 68%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 15% 18%;
+    --secondary-foreground: 38 20% 92%;
+    --muted: 222 15% 16%;
+    --muted-foreground: 38 10% 58%;
+    --accent: 35 70% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 15% 20%;
+    --input: 222 15% 20%;
+    --ring: 243 80% 68%;
   }
 }
 
@@ -55,5 +59,42 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+  h1, h2, h3 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.01em;
+  }
+}
+
+/* ===== 动画 ===== */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+.animate-fade-in { animation: fadeIn 0.5s ease-out both; }
+.animate-slide-up { animation: slideUp 0.5s ease-out both; }
+.animate-scale-in { animation: scaleIn 0.3s ease-out both; }
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+
+/* ===== 修复 Dialog/Select 动画（无 tailwindcss-animate） ===== */
+@keyframes dlgFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dlgFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes dlgZoomIn { from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); } to { opacity: 1; transform: translate(-50%, -48%) scale(1); } }
+@keyframes dlgZoomOut { from { opacity: 1; transform: translate(-50%, -48%) scale(1); } to { opacity: 0; transform: translate(-50%, -48%) scale(0.96); } }
+
+[data-state="open"][class*="fade-in"] { animation: dlgFadeIn 0.2s ease-out !important; }
+[data-state="closed"][class*="fade-out"] { animation: dlgFadeOut 0.15s ease-in !important; }
+[data-state="open"][class*="zoom-in"], [data-state="open"][class*="slide-in"] { animation: dlgZoomIn 0.2s ease-out !important; }
+[data-state="closed"][class*="zoom-out"], [data-state="closed"][class*="slide-out"] { animation: dlgZoomOut 0.15s ease-in !important; }
+
+/* ===== 纸张质感背景 ===== */
+.paper-texture {
+  background-image:
+    radial-gradient(circle at 20% 80%, hsl(35 40% 95% / 0.5) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, hsl(243 30% 95% / 0.3) 0%, transparent 50%);
 }

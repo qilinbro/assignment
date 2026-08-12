@@ -49,6 +49,10 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        heading: ['"Lora"', '"Noto Serif SC"', '"Songti SC"', '"STSong"', '"SimSun"', "Georgia", "serif"],
+        body: ['-apple-system', 'BlinkMacSystemFont', '"PingFang SC"', '"Microsoft YaHei"', '"Hiragino Sans GB"', "system-ui", "sans-serif"],
+      },
     },
   },
   plugins: [],

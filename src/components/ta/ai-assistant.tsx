@@ -37,6 +37,7 @@ export function AIAssistant({
 }: AIAssistantProps) {
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [analysis, setAnalysis] = React.useState<AIAnalysisResult | null>(null);
+  const [errorMsg, setErrorMsg] = React.useState("");
   const [customInstructions, setCustomInstructions] = React.useState("");
   const [isGeneratingFeedback, setIsGeneratingFeedback] = React.useState(false);
   const [generatedFeedback, setGeneratedFeedback] = React.useState("");
@@ -92,6 +93,7 @@ export function AIAssistant({
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     setAnalysis(null);
+    setErrorMsg("");
 
     try {
       const response = await fetch("/api/ai/analyze", {
@@ -106,9 +108,14 @@ export function AIAssistant({
       });
 
       const result = await response.json();
+      if (!response.ok) {
+        setErrorMsg(result.error || "分析失败，请稍后重试");
+        return;
+      }
       setAnalysis(result);
     } catch (error) {
       console.error("Analysis failed:", error);
+      setErrorMsg("网络错误，请稍后重试");
     } finally {
       setIsAnalyzing(false);
     }
@@ -230,6 +237,12 @@ export function AIAssistant({
               </div>
             )}
 
+            {errorMsg && !isAnalyzing && (
+              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400">
+                {errorMsg}
+              </div>
+            )}
+
             {analysis && !chatMode && (
               <div className="space-y-3">
                 {/* Summary */}
@@ -245,7 +258,7 @@ export function AIAssistant({
                     优点
                   </h4>
                   <ul className="space-y-1">
-                    {analysis.strengths.map((strength, i) => (
+                    {(analysis.strengths || []).map((strength, i) => (
                       <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                         <span className="text-green-600 mt-0.5">✓</span>
                         <span>{strength}</span>
@@ -261,7 +274,7 @@ export function AIAssistant({
                     待改进之处
                   </h4>
                   <ul className="space-y-1">
-                    {analysis.weaknesses.map((weakness, i) => (
+                    {(analysis.weaknesses || []).map((weakness, i) => (
                       <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                         <span className="text-amber-600 mt-0.5">!</span>
                         <span>{weakness}</span>
@@ -274,7 +287,7 @@ export function AIAssistant({
                 <div>
                   <h4 className="font-medium mb-1 text-sm">逐题分析</h4>
                   <div className="space-y-2">
-                    {analysis.questionsAddressed.map((q) => (
+                    {(analysis.questionsAddressed || []).map((q) => (
                       <div key={q.questionNumber} className="flex items-center justify-between p-2 border rounded">
                         <span className="text-sm font-medium">第 {q.questionNumber} 题</span>
                         <div className="flex items-center gap-2">
@@ -298,7 +311,7 @@ export function AIAssistant({
                 <div>
                   <h4 className="font-medium mb-1 text-sm">改进建议</h4>
                   <ul className="space-y-1">
-                    {analysis.improvementSuggestions.map((suggestion, i) => (
+                    {(analysis.improvementSuggestions || []).map((suggestion, i) => (
                       <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                         <span className="text-purple-600 mt-0.5">→</span>
                         <span>{suggestion}</span>

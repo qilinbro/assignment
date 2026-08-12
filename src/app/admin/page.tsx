@@ -9,6 +9,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useRequireAuth } from "@/lib/auth/use-require-auth";
 import { useAuth } from "@/components/providers/auth-provider";
+import { StatusBadge } from "@/components/assignment/status-badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { format } from "date-fns";
 
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: "管理员",
@@ -29,8 +38,40 @@ export default function AdminDashboard() {
   const [loading, setLoading] = React.useState(true);
   const [assignments, setAssignments] = React.useState<any[]>([]);
   const [users, setUsers] = React.useState<any[]>([]);
+  const [pendingDialog, setPendingDialog] = React.useState(false);
+  const [pendingList, setPendingList] = React.useState<any[]>([]);
+  const [pendingLoading, setPendingLoading] = React.useState(false);
+
+  const fetchPending = async () => {
+    setPendingLoading(true);
+    setPendingList([]);
+    try {
+      const assignRes = await fetch("/api/assignments");
+      const assignList = assignRes.ok ? await assignRes.json() : [];
+      const allPending: any[] = [];
+      for (const a of assignList) {
+        const subRes = await fetch(`/api/submissions?assignmentId=${a.id}`);
+        if (subRes.ok) {
+          const subs = await subRes.json();
+          for (const s of subs) {
+            if (s.status === "PENDING" || s.status === "GRADING") {
+              allPending.push({ ...s, assignmentTitle: a.title });
+            }
+          }
+        }
+      }
+      setPendingList(allPending);
+    } catch {}
+    setPendingLoading(false);
+    setPendingDialog(true);
+  };
 
   React.useEffect(() => {
+    // 从数据库读取作业列表
+    fetch("/api/assignments")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setAssignments(Array.isArray(d) ? d : []))
+      .catch(() => setAssignments([]));
     // 从数据库读取全部用户
     fetch("/api/users")
       .then((r) => (r.ok ? r.json() : { users: [] }))
@@ -102,7 +143,7 @@ export default function AdminDashboard() {
           <>
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-              <Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => document.getElementById("assignments-table")?.scrollIntoView({ behavior: "smooth" })}>
                 <CardHeader className="pb-3">
                   <CardDescription>作业总数</CardDescription>
                   <CardTitle className="text-3xl">{stats.totalAssignments}</CardTitle>
@@ -115,7 +156,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => document.getElementById("assignments-table")?.scrollIntoView({ behavior: "smooth" })}>
                 <CardHeader className="pb-3">
                   <CardDescription>提交总数</CardDescription>
                   <CardTitle className="text-3xl">{stats.totalSubmissions}</CardTitle>
@@ -128,7 +169,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={fetchPending}>
                 <CardHeader className="pb-3">
                   <CardDescription>待批改</CardDescription>
                   <CardTitle className="text-3xl">{stats.pendingGrading}</CardTitle>
@@ -136,12 +177,12 @@ export default function AdminDashboard() {
                 <CardContent>
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Clock className="h-4 w-4 mr-1" />
-                    等待助教批阅
+                    点击查看未批改
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => document.getElementById("assignments-table")?.scrollIntoView({ behavior: "smooth" })}>
                 <CardHeader className="pb-3">
                   <CardDescription>已完成批改</CardDescription>
                   <CardTitle className="text-3xl">{stats.completedGrading}</CardTitle>
@@ -154,7 +195,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => document.getElementById("assignments-table")?.scrollIntoView({ behavior: "smooth" })}>
                 <CardHeader className="pb-3">
                   <CardDescription>待处理重新提交</CardDescription>
                   <CardTitle className="text-3xl">{stats.pendingResubmissions}</CardTitle>
@@ -169,7 +210,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Assignments Table */}
-            <Card>
+            <Card id="assignments-table">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -230,13 +271,13 @@ export default function AdminDashboard() {
                                 <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
                                   <div
                                     className="h-full bg-primary"
-                                    style={{ width: `${assignment.gradingProgress}%` }}
+                                    style={{ width: `${assignment.gradingProgress ?? 0}%` }}
                                   />
                                 </div>
-                                <span className="text-sm font-medium">{assignment.gradingProgress}%</span>
+                                <span className="text-sm font-medium">{assignment.gradingProgress ?? 0}%</span>
                               </div>
                               <div className="text-xs text-muted-foreground text-center mt-1">
-                                {assignment.completedGrading} / {assignment.totalSubmissions * 2}
+                                {assignment.completedGrading ?? 0} / {assignment.totalSubmissions ?? 0}
                               </div>
                             </td>
                             <td className="p-4 text-center">
@@ -356,6 +397,40 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </main>
+
+      {/* 待批改详情弹窗 */}
+      <Dialog open={pendingDialog} onOpenChange={setPendingDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>待批改列表</DialogTitle>
+            <DialogDescription>尚未完成批改的学生提交</DialogDescription>
+          </DialogHeader>
+          {pendingLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">加载中...</p>
+          ) : pendingList.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">暂无待批改的提交 🎉</p>
+          ) : (
+            <div className="space-y-3">
+              {pendingList.map((s) => (
+                <div key={s.id} className="border rounded-lg p-3 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-sm">{s.assignmentTitle}</span>
+                      <StatusBadge status={s.status} />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      学生 {s.studentId?.slice(-6)} · {format(new Date(s.submittedAt), "MM月dd日 HH:mm")} · {s.files?.length || 0} 个文件
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => router.push(`/admin/assignments/${s.assignmentId}`)}>
+                    查看
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

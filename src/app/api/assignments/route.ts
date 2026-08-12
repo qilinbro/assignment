@@ -1,20 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assignmentService } from "@/lib/assignment";
 import { CreateAssignmentData } from "@/types";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
-// GET /api/assignments - Get all assignments
+// GET /api/assignments - Get all assignments (with stats)
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const adminId = searchParams.get("adminId");
 
-    if (adminId) {
-      const assignments = await assignmentService.getAssignmentsByAdmin(adminId);
-      return NextResponse.json(assignments);
-    }
+    const list = adminId
+      ? await assignmentService.getAssignmentsByAdmin(adminId)
+      : await assignmentService.getAllAssignments();
 
-    const assignments = await assignmentService.getAllAssignments();
-    return NextResponse.json(assignments);
+    // 给每个作业附加提交统计
+    const enriched = await Promise.all(
+      list.map(async (a) => {
+        const stats = await assignmentService.getAssignmentStatistics(a.id);
+        return {
+          ...a,
+          totalSubmissions: stats?.totalSubmissions ?? 0,
+          completedGrading: stats?.completedGrading ?? 0,
+          pendingGrading: stats?.pendingGrading ?? 0,
+          resubmissions: stats?.resubmissions ?? 0,
+          gradingProgress: stats?.gradingProgress ?? 0,
+        };
+      })
+    );
+
+    return NextResponse.json(enriched);
   } catch (error) {
     console.error("Error fetching assignments:", error);
     return NextResponse.json(
@@ -28,6 +42,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 });
+    }
 
     const assignmentData: CreateAssignmentData = {
       title: body.title,
@@ -37,7 +55,7 @@ export async function POST(request: NextRequest) {
       taCount: body.taCount,
       allowResubmission: body.allowResubmission ?? false,
       resubmissionDescription: body.resubmissionDescription,
-      createdBy: body.createdBy || "admin-1", // In a real app, this would come from auth
+      createdBy: currentUser.id,
     };
 
     const assignment = await assignmentService.createAssignment(assignmentData);
