@@ -22,7 +22,7 @@ class MockUserRepository implements IUserRepository {
     const mockUsers: User[] = [
       {
         id: "admin-1",
-        name: "Admin User",
+        name: "管理员",
         email: "admin@example.com",
         role: "ADMIN",
         createdAt: new Date("2024-01-01"),
@@ -30,35 +30,35 @@ class MockUserRepository implements IUserRepository {
       // TAs
       {
         id: "ta-1",
-        name: "TA 01",
+        name: "助教01",
         email: "ta01@example.com",
         role: "TA",
         createdAt: new Date("2024-01-01"),
       },
       {
         id: "ta-2",
-        name: "TA 02",
+        name: "助教02",
         email: "ta02@example.com",
         role: "TA",
         createdAt: new Date("2024-01-01"),
       },
       {
         id: "ta-3",
-        name: "TA 03",
+        name: "助教03",
         email: "ta03@example.com",
         role: "TA",
         createdAt: new Date("2024-01-01"),
       },
       {
         id: "ta-4",
-        name: "TA 04",
+        name: "助教04",
         email: "ta04@example.com",
         role: "TA",
         createdAt: new Date("2024-01-01"),
       },
       {
         id: "ta-5",
-        name: "TA 05",
+        name: "助教05",
         email: "ta05@example.com",
         role: "TA",
         createdAt: new Date("2024-01-01"),
@@ -66,21 +66,21 @@ class MockUserRepository implements IUserRepository {
       // Students
       {
         id: "student-1",
-        name: "Student A",
+        name: "学生A",
         email: "student.a@example.com",
         role: "STUDENT",
         createdAt: new Date("2024-01-01"),
       },
       {
         id: "student-2",
-        name: "Student B",
+        name: "学生B",
         email: "student.b@example.com",
         role: "STUDENT",
         createdAt: new Date("2024-01-01"),
       },
       {
         id: "student-3",
-        name: "Student C",
+        name: "学生C",
         email: "student.c@example.com",
         role: "STUDENT",
         createdAt: new Date("2024-01-01"),

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     if (!analysis) {
       return NextResponse.json(
-        { error: "analysis is required" },
+        { error: "analysis 为必填项" },
         { status: 400 }
       );
     }
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Error generating feedback:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate feedback" },
+      { error: error.message || "生成反馈失败" },
       { status: 500 }
     );
   }

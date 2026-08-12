@@ -36,13 +36,13 @@ class SubmissionService implements ISubmissionService {
     // Verify assignment exists and is open
     const assignment = await assignmentRepository.findById(data.assignmentId);
     if (!assignment) {
-      throw new Error("Assignment not found");
+      throw new Error("未找到作业");
     }
 
     // Check if deadline has passed
     const now = new Date();
     if (now >= assignment.deadline) {
-      throw new Error("Assignment deadline has passed");
+      throw new Error("作业截止时间已过");
     }
 
     // Check if student already submitted
@@ -53,12 +53,12 @@ class SubmissionService implements ISubmissionService {
       );
 
     if (existingSubmission) {
-      throw new Error("You have already submitted this assignment");
+      throw new Error("你已经提交过本作业");
     }
 
     // Validate files
     if (!data.files || data.files.length === 0) {
-      throw new Error("At least one file must be uploaded");
+      throw new Error("必须至少上传一个文件");
     }
 
     // Validate file types (images only for now)
@@ -66,7 +66,7 @@ class SubmissionService implements ISubmissionService {
     for (const file of data.files) {
       if (!allowedTypes.includes(file.fileType)) {
         throw new Error(
-          `Invalid file type: ${file.fileType}. Only JPG, PNG, and WEBP are allowed.`
+          `文件类型无效：${file.fileType}。仅允许 JPG、PNG 和 WEBP。`
         );
       }
     }
@@ -119,7 +119,7 @@ class SubmissionService implements ISubmissionService {
   ): Promise<Submission | null> {
     const submission = await submissionRepository.findById(id);
     if (!submission) {
-      throw new Error("Submission not found");
+      throw new Error("未找到提交");
     }
 
     // Validate status transitions
@@ -136,7 +136,7 @@ class SubmissionService implements ISubmissionService {
 
     if (!allowedStatuses.includes(status)) {
       throw new Error(
-        `Invalid status transition from ${currentStatus} to ${status}`
+        `无效的状态转换：从 ${currentStatus} 到 ${status}`
       );
     }
 
@@ -146,7 +146,7 @@ class SubmissionService implements ISubmissionService {
   async deleteSubmission(id: string): Promise<boolean> {
     const submission = await submissionRepository.findById(id);
     if (!submission) {
-      throw new Error("Submission not found");
+      throw new Error("未找到提交");
     }
 
     // Check if grading has started
@@ -159,7 +159,7 @@ class SubmissionService implements ISubmissionService {
 
     if (hasStartedGrading) {
       throw new Error(
-        "Cannot delete submission that has been graded or is being graded"
+        "无法删除已批改或正在批改的提交"
       );
     }
 
@@ -177,7 +177,7 @@ class SubmissionService implements ISubmissionService {
     if (!assignment) {
       return {
         canSubmit: false,
-        reason: "Assignment not found",
+        reason: "未找到作业",
       };
     }
 
@@ -185,7 +185,7 @@ class SubmissionService implements ISubmissionService {
     if (now >= assignment.deadline) {
       return {
         canSubmit: false,
-        reason: "Assignment deadline has passed",
+        reason: "作业截止时间已过",
       };
     }
 
@@ -210,7 +210,7 @@ class SubmissionService implements ISubmissionService {
     // Get student info (in a real system, this would come from user repository)
     const student = {
       id: submission.studentId,
-      name: `Student ${submission.studentId.split("-")[1]}`,
+      name: `学生${submission.studentId.split("-")[1]}`,
     };
 
     const assignments =

@@ -8,50 +8,51 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
+import type { SubmissionStatus } from "@/types";
 
-// Mock TA data
+// 模拟助教数据
 const mockTAId = "ta-1";
-const mockTAName = "TA 01";
+const mockTAName = "助教01";
 
 const mockAssignments = [
   {
     id: "sa-5",
-    assignmentTitle: "Week 1 Homework",
+    assignmentTitle: "第一周作业",
     assignmentId: "assignment-week-1",
     studentId: "student-3",
-    studentName: "Student C",
+    studentName: "学生C",
     submittedAt: "2024-08-12T15:00:00",
-    status: "GRADING",
+    status: "GRADING" as SubmissionStatus,
     submissionId: "submission-3",
   },
   {
     id: "sa-1",
-    assignmentTitle: "Week 1 Homework",
+    assignmentTitle: "第一周作业",
     assignmentId: "assignment-week-1",
     studentId: "student-1",
-    studentName: "Student A",
+    studentName: "学生A",
     submittedAt: "2024-08-12T14:20:00",
-    status: "COMPLETED",
+    status: "COMPLETED" as SubmissionStatus,
     submissionId: "submission-1",
   },
   {
     id: "sa-2",
-    assignmentTitle: "Week 1 Homework",
+    assignmentTitle: "第一周作业",
     assignmentId: "assignment-week-1",
     studentId: "student-1",
-    studentName: "Student A",
+    studentName: "学生A",
     submittedAt: "2024-08-12T14:20:00",
-    status: "COMPLETED",
+    status: "COMPLETED" as SubmissionStatus,
     submissionId: "submission-1",
   },
   {
     id: "sa-6",
-    assignmentTitle: "Week 1 Homework",
+    assignmentTitle: "第一周作业",
     assignmentId: "assignment-week-1",
     studentId: "student-3",
-    studentName: "Student C",
+    studentName: "学生C",
     submittedAt: "2024-08-12T15:00:00",
-    status: "PENDING",
+    status: "PENDING" as SubmissionStatus,
     submissionId: "submission-3",
   },
 ];
@@ -76,15 +77,15 @@ export default function TADashboard() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold">TA Dashboard</h1>
+                <h1 className="text-2xl font-bold">助教控制台</h1>
                 <Badge variant="outline">{mockTAName}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                View and grade your assigned submissions
+                查看并批改分配给你的提交
               </p>
             </div>
-            <Button variant="outline" onClick={() => (window.location.href = "/")}>
-              Back to Home
+            <Button variant="outline" onClick={() => (window.location.href = "/login")}>
+              退出登录
             </Button>
           </div>
         </div>
@@ -95,52 +96,52 @@ export default function TADashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Total Assigned</CardDescription>
+              <CardDescription>分配总数</CardDescription>
               <CardTitle className="text-3xl">{mockStats.total}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Star className="h-4 w-4 mr-1" />
-                All assignments
+                所有作业
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Pending</CardDescription>
+              <CardDescription>待处理</CardDescription>
               <CardTitle className="text-3xl">{mockStats.pending}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1" />
-                Not started
+                尚未开始
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>In Progress</CardDescription>
+              <CardDescription>进行中</CardDescription>
               <CardTitle className="text-3xl">{mockStats.inProgress}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <AlertCircle className="h-4 w-4 mr-1" />
-                Being graded
+                正在批改
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Completed</CardDescription>
+              <CardDescription>已完成</CardDescription>
               <CardTitle className="text-3xl">{mockStats.completed}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <CheckCircle className="h-4 w-4 mr-1" />
-                Finished grading
+                已完成批改
               </div>
             </CardContent>
           </Card>
@@ -152,10 +153,9 @@ export default function TADashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Pending Grading</CardTitle>
+                  <CardTitle>待批改</CardTitle>
                   <CardDescription>
-                    {pendingAssignments.length + gradingAssignments.length} assignment(s) need
-                    attention
+                    {pendingAssignments.length + gradingAssignments.length} 份作业需要处理
                   </CardDescription>
                 </div>
                 <Badge variant="destructive">
@@ -173,17 +173,14 @@ export default function TADashboard() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
                         <span className="font-medium">{assignment.studentName}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {assignment.assignmentTitle}
-                        </Badge>
                         <StatusBadge status={assignment.status} />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Submitted {format(new Date(assignment.submittedAt), "MMM dd, HH:mm")}
+                        提交于 {format(new Date(assignment.submittedAt), "MM月dd日 HH:mm")}
                       </p>
                     </div>
                     <Link href={`/ta/assignments/${assignment.id}`}>
-                      <Button>Grade Now</Button>
+                      <Button>开始批改</Button>
                     </Link>
                   </div>
                 ))}
@@ -198,9 +195,9 @@ export default function TADashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Completed Grading</CardTitle>
+                  <CardTitle>已完成批改</CardTitle>
                   <CardDescription>
-                    {completedAssignments.length} assignment(s) finished
+                    {completedAssignments.length} 份作业已完成
                   </CardDescription>
                 </div>
                 <Badge variant="secondary">{completedAssignments.length}</Badge>
@@ -216,19 +213,16 @@ export default function TADashboard() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
                         <span className="font-medium">{assignment.studentName}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {assignment.assignmentTitle}
-                        </Badge>
                         <StatusBadge status={assignment.status} />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Graded {format(new Date(assignment.submittedAt), "MMM dd, HH:mm")}
+                        批改于 {format(new Date(assignment.submittedAt), "MM月dd日 HH:mm")}
                       </p>
                     </div>
                     <div className="flex gap-2">
                       <Link href={`/ta/assignments/${assignment.id}`}>
                         <Button variant="outline" size="sm">
-                          View
+                          查看
                         </Button>
                       </Link>
                     </div>
@@ -244,12 +238,12 @@ export default function TADashboard() {
           <Card>
             <CardContent className="py-12 text-center">
               <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Assignments Yet</h3>
+              <h3 className="text-lg font-semibold mb-2">暂无分配的作业</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                You haven't been assigned any submissions to grade yet.
+                目前还没有分配给你批改的提交。
               </p>
               <p className="text-sm text-muted-foreground">
-                Check back later or contact the admin for more information.
+                请稍后再来查看，或联系管理员了解更多信息。
               </p>
             </CardContent>
           </Card>
@@ -259,7 +253,7 @@ export default function TADashboard() {
         <Card className="mt-6 bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">
           <CardHeader>
             <CardTitle className="text-blue-900 dark:text-blue-100">
-              Grading Guidelines
+              批改指南
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -267,25 +261,25 @@ export default function TADashboard() {
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 dark:text-blue-400 mt-1">•</span>
                 <span>
-                  Provide constructive feedback that helps students improve their work
+                  提供建设性的反馈，帮助学生改进作业
                 </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 dark:text-blue-400 mt-1">•</span>
                 <span>
-                  Be specific about what needs revision and what was done well
+                  具体说明哪些地方需要修改、哪些地方做得好
                 </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 dark:text-blue-400 mt-1">•</span>
                 <span>
-                  Only mark "Require Resubmission" if substantial changes are needed
+                  仅在需要大幅修改时才勾选"要求重新提交"
                 </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 dark:text-blue-400 mt-1">•</span>
                 <span>
-                  Upload feedback files (images, PDFs) to provide detailed comments
+                  上传反馈文件（图片、PDF）以提供详细的批注
                 </span>
               </li>
             </ul>

@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     if (!submissionId || !message) {
       return NextResponse.json(
-        { error: "submissionId and message are required" },
+        { error: "submissionId 和 message 为必填项" },
         { status: 400 }
       );
     }
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Error in AI chat:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to process chat message" },
+      { error: error.message || "处理聊天消息失败" },
       { status: 500 }
     );
   }

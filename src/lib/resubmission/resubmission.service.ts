@@ -36,39 +36,39 @@ class ResubmissionService implements IResubmissionService {
     // Verify the original submission exists
     const submission = await submissionRepository.findById(data.submissionId);
     if (!submission) {
-      throw new Error("Original submission not found");
+      throw new Error("未找到原始提交");
     }
 
     // Verify the student owns this submission
     if (submission.studentId !== data.studentId) {
-      throw new Error("You can only create resubmissions for your own submissions");
+      throw new Error("只能为自己的提交创建重新提交");
     }
 
     // Check if resubmission is allowed for this assignment
     const assignment = await assignmentRepository.findById(submission.assignmentId);
     if (!assignment) {
-      throw new Error("Assignment not found");
+      throw new Error("未找到作业");
     }
 
     if (!assignment.allowResubmission) {
-      throw new Error("Resubmission is not allowed for this assignment");
+      throw new Error("本作业不允许重新提交");
     }
 
     // Check if the submission requires resubmission
     if (submission.status !== "RESUBMISSION_REQUIRED") {
       throw new Error(
-        "Resubmission is only allowed when the submission status is RESUBMISSION_REQUIRED"
+        "只有在提交状态为 RESUBMISSION_REQUIRED 时才允许重新提交"
       );
     }
 
     // Validate that a reason is provided
     if (!data.reason || data.reason.trim().length === 0) {
-      throw new Error("A reason for resubmission must be provided");
+      throw new Error("必须填写重新提交原因");
     }
 
     // Validate files
     if (!data.files || data.files.length === 0) {
-      throw new Error("At least one file must be uploaded");
+      throw new Error("必须至少上传一个文件");
     }
 
     // Create the resubmission
@@ -106,7 +106,7 @@ class ResubmissionService implements IResubmissionService {
   async deleteResubmission(id: string): Promise<boolean> {
     const resubmission = await resubmissionRepository.findById(id);
     if (!resubmission) {
-      throw new Error("Resubmission not found");
+      throw new Error("未找到重新提交");
     }
 
     // Check if resubmission has been processed
@@ -116,7 +116,7 @@ class ResubmissionService implements IResubmissionService {
 
     if (submission && submission.status !== "RESUBMITTED") {
       throw new Error(
-        "Cannot delete a resubmission that has already been processed"
+        "无法删除已处理的重新提交"
       );
     }
 
@@ -137,14 +137,14 @@ class ResubmissionService implements IResubmissionService {
     if (!submission) {
       return {
         canResubmit: false,
-        reason: "Submission not found",
+        reason: "未找到提交",
       };
     }
 
     if (submission.studentId !== studentId) {
       return {
         canResubmit: false,
-        reason: "You can only resubmit your own submissions",
+        reason: "只能重新提交自己的提交",
       };
     }
 
@@ -152,21 +152,21 @@ class ResubmissionService implements IResubmissionService {
     if (!assignment) {
       return {
         canResubmit: false,
-        reason: "Assignment not found",
+        reason: "未找到作业",
       };
     }
 
     if (!assignment.allowResubmission) {
       return {
         canResubmit: false,
-        reason: "Resubmission is not allowed for this assignment",
+        reason: "本作业不允许重新提交",
       };
     }
 
     if (submission.status !== "RESUBMISSION_REQUIRED") {
       return {
         canResubmit: false,
-        reason: "Resubmission is only allowed when required by a TA",
+        reason: "只有在助教要求时才允许重新提交",
       };
     }
 
@@ -185,7 +185,7 @@ class ResubmissionService implements IResubmissionService {
     if (!resubmission) {
       return {
         success: false,
-        message: "Resubmission not found",
+        message: "未找到重新提交",
       };
     }
 
@@ -195,7 +195,7 @@ class ResubmissionService implements IResubmissionService {
     if (!submission) {
       return {
         success: false,
-        message: "Original submission not found",
+        message: "未找到原始提交",
       };
     }
 
@@ -203,7 +203,7 @@ class ResubmissionService implements IResubmissionService {
     if (!assignment) {
       return {
         success: false,
-        message: "Assignment not found",
+        message: "未找到作业",
       };
     }
 
@@ -221,7 +221,7 @@ class ResubmissionService implements IResubmissionService {
 
     return {
       success: true,
-      message: "Resubmission processed successfully. TAs will be notified for re-grading.",
+      message: "重新提交已成功处理，将通知助教重新批改。",
     };
   }
 
@@ -243,7 +243,7 @@ class ResubmissionService implements IResubmissionService {
     // Get student info
     const student = {
       id: resubmission.studentId,
-      name: `Student ${resubmission.studentId.split("-")[1]}`,
+      name: `学生${resubmission.studentId.split("-")[1]}`,
     };
 
     return {

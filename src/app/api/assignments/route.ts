@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching assignments:", error);
     return NextResponse.json(
-      { error: "Failed to fetch assignments" },
+      { error: "获取作业列表失败" },
       { status: 500 }
     );
   }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Error creating assignment:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create assignment" },
+      { error: error.message || "创建作业失败" },
       { status: 400 }
     );
   }

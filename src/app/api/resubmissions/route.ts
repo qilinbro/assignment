@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Error creating resubmission:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create resubmission" },
+      { error: error.message || "创建重新提交失败" },
       { status: 400 }
     );
   }
@@ -47,13 +47,13 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: "Please provide submissionId or studentId filter" },
+      { error: "请提供 submissionId 或 studentId 筛选条件" },
       { status: 400 }
     );
   } catch (error) {
     console.error("Error fetching resubmissions:", error);
     return NextResponse.json(
-      { error: "Failed to fetch resubmissions" },
+      { error: "获取重新提交列表失败" },
       { status: 500 }
     );
   }

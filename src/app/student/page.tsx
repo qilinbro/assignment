@@ -8,18 +8,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
+import type { SubmissionStatus } from "@/types";
 
-// Mock student data
+// 模拟学生数据
 const mockStudentId = "student-1";
-const mockStudentName = "Student A";
+const mockStudentName = "学生A";
 
 const mockSubmissions = [
   {
     id: "submission-1",
     assignmentId: "assignment-week-1",
-    assignmentTitle: "Week 1 Homework",
+    assignmentTitle: "第一周作业",
     assignmentDeadline: "2026-08-20T23:59:59",
-    status: "COMPLETED",
+    status: "COMPLETED" as SubmissionStatus,
     submittedAt: "2024-08-12T14:20:00",
     hasFeedback: true,
     averageScore: 87.5,
@@ -28,9 +29,9 @@ const mockSubmissions = [
   {
     id: "submission-2",
     assignmentId: "assignment-week-2",
-    assignmentTitle: "Week 2 Homework",
+    assignmentTitle: "第二周作业",
     assignmentDeadline: "2026-09-01T23:59:59",
-    status: "RESUBMISSION_REQUIRED",
+    status: "RESUBMISSION_REQUIRED" as SubmissionStatus,
     submittedAt: "2024-08-12T14:35:00",
     hasFeedback: true,
     averageScore: 78,
@@ -39,9 +40,9 @@ const mockSubmissions = [
   {
     id: "submission-3",
     assignmentId: "assignment-week-3",
-    assignmentTitle: "Week 3 Homework",
+    assignmentTitle: "第三周作业",
     assignmentDeadline: "2026-08-15T23:59:59",
-    status: "GRADING",
+    status: "GRADING" as SubmissionStatus,
     submittedAt: "2024-08-12T15:00:00",
     hasFeedback: false,
     averageScore: null,
@@ -67,20 +68,20 @@ export default function StudentDashboard() {
     if (submission.status === "COMPLETED") {
       return {
         icon: <CheckCircle className="h-4 w-4" />,
-        text: "Completed",
+        text: "已完成",
         color: "text-green-600",
       };
     }
     if (submission.status === "RESUBMISSION_REQUIRED") {
       return {
         icon: <AlertCircle className="h-4 w-4" />,
-        text: "Resubmission Required",
+        text: "需要重新提交",
         color: "text-amber-600",
       };
     }
     return {
       icon: <Clock className="h-4 w-4" />,
-      text: "Pending Grading",
+      text: "待批改",
       color: "text-blue-600",
     };
   };
@@ -93,15 +94,15 @@ export default function StudentDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold">Student Dashboard</h1>
+                <h1 className="text-2xl font-bold">学生控制台</h1>
                 <Badge variant="outline">{mockStudentName}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                View your submissions and feedback
+                查看你的提交与反馈
               </p>
             </div>
-            <Button variant="outline" onClick={() => (window.location.href = "/")}>
-              Back to Home
+            <Button variant="outline" onClick={() => (window.location.href = "/login")}>
+              退出登录
             </Button>
           </div>
         </div>
@@ -112,52 +113,52 @@ export default function StudentDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Total Assignments</CardDescription>
+              <CardDescription>作业总数</CardDescription>
               <CardTitle className="text-3xl">{mockStats.totalAssignments}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <BookOpen className="h-4 w-4 mr-1" />
-                Available assignments
+                可用作业数
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Submitted</CardDescription>
+              <CardDescription>已提交</CardDescription>
               <CardTitle className="text-3xl">{mockStats.submitted}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <CheckCircle className="h-4 w-4 mr-1" />
-                Assignments submitted
+                已提交作业数
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Pending Grading</CardDescription>
+              <CardDescription>待批改</CardDescription>
               <CardTitle className="text-3xl">{mockStats.pendingGrading}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1" />
-                Awaiting feedback
+                等待反馈
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Average Score</CardDescription>
+              <CardDescription>平均分</CardDescription>
               <CardTitle className="text-3xl">{mockStats.averageScore}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <TrendingUp className="h-4 w-4 mr-1" />
-                Across completed work
+                已完成作业的平均分
               </div>
             </CardContent>
           </Card>
@@ -171,15 +172,14 @@ export default function StudentDashboard() {
                 <AlertCircle className="h-6 w-6 text-amber-600 mt-1" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">
-                    Action Required
+                    需要处理
                   </h3>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-                    You have {mockStats.resubmissionRequired} assignment(s) that require
-                    resubmission. Please review the TA feedback and submit your revised work.
+                    你有 {mockStats.resubmissionRequired} 份作业需要重新提交。请查看助教反馈并提交修改后的作业。
                   </p>
                   <Link href={`/assignment/${mockSubmissions[1].assignmentId}/resubmit`}>
                     <Button variant="outline" size="sm">
-                      Go to Resubmission
+                      前往重新提交
                     </Button>
                   </Link>
                 </div>
@@ -193,10 +193,10 @@ export default function StudentDashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Your Submissions</CardTitle>
-                <CardDescription>Track your assignment progress and feedback</CardDescription>
+                <CardTitle>我的提交</CardTitle>
+                <CardDescription>跟踪你的作业进度与反馈</CardDescription>
               </div>
-              <Badge variant="secondary">{mockSubmissions.length} submissions</Badge>
+              <Badge variant="secondary">{mockSubmissions.length} 次提交</Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -216,12 +216,12 @@ export default function StudentDashboard() {
                           <h3 className="font-medium">{submission.assignmentTitle}</h3>
                           {isPastDeadline && (
                             <Badge variant="destructive" className="text-xs">
-                              Closed
+                              已截止
                             </Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Submitted {format(new Date(submission.submittedAt), "MMM dd, yyyy 'at' HH:mm")}
+                          提交于 {format(new Date(submission.submittedAt), "yyyy年MM月dd日 HH:mm")}
                         </p>
                       </div>
                       <StatusBadge status={submission.status} />
@@ -231,17 +231,17 @@ export default function StudentDashboard() {
                       <div className="flex items-center gap-4 text-sm">
                         {submission.hasFeedback ? (
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">Score:</span>
+                            <span className="text-muted-foreground">分数：</span>
                             <Badge variant="outline" className="font-semibold">
                               {submission.averageScore}/100
                             </Badge>
                             <span className="text-muted-foreground">
-                              ({submission.feedbackCount} TA(s))
+                              （{submission.feedbackCount} 名助教）
                             </span>
                           </div>
                         ) : (
                           <span className="text-muted-foreground text-sm">
-                            No feedback yet
+                            暂无反馈
                           </span>
                         )}
                       </div>
@@ -250,13 +250,13 @@ export default function StudentDashboard() {
                         {submission.hasFeedback && (
                           <Link href={`/assignment/${submission.assignmentId}`}>
                             <Button variant="outline" size="sm">
-                              View Feedback
+                              查看反馈
                             </Button>
                           </Link>
                         )}
                         {submission.status === "RESUBMISSION_REQUIRED" && !isPastDeadline && (
                           <Link href={`/assignment/${submission.assignmentId}/resubmit`}>
-                            <Button size="sm">Resubmit</Button>
+                            <Button size="sm">重新提交</Button>
                           </Link>
                         )}
                       </div>
@@ -272,27 +272,27 @@ export default function StudentDashboard() {
         <div className="mt-6 grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Need Help?</CardTitle>
+              <CardTitle className="text-base">需要帮助？</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <span>•</span>
-                <span>Contact your TA for clarification</span>
+                <span>联系你的助教进行答疑</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <span>•</span>
-                <span>Review assignment guidelines before submitting</span>
+                <span>提交前请仔细阅读作业要求</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <span>•</span>
-                <span>Check feedback comments for improvement tips</span>
+                <span>查看反馈评语以获取改进建议</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Upcoming Deadlines</CardTitle>
+              <CardTitle className="text-base">即将到来的截止时间</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               {mockSubmissions
@@ -301,7 +301,7 @@ export default function StudentDashboard() {
                   <div key={submission.id} className="flex justify-between">
                     <span>{submission.assignmentTitle}</span>
                     <span className="text-muted-foreground">
-                      {format(new Date(submission.assignmentDeadline), "MMM dd")}
+                      {format(new Date(submission.assignmentDeadline), "MM月dd日")}
                     </span>
                   </div>
                 ))}

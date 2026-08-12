@@ -50,23 +50,23 @@ class MockAIAssistantService implements AIGradingAssistant {
   ): Promise<string> {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    let feedback = `**AI-Generated Feedback:**
+    let feedback = `**AI 生成的反馈：**
 
 ${analysis.summary}
 
-**Strengths:**
+**优点：**
 ${analysis.strengths.map((s) => `- ${s}`).join("\n")}
 
-**Areas for Improvement:**
+**待改进之处：**
 ${analysis.weaknesses.map((w) => `- ${w}`).join("\n")}
 
-**Specific Suggestions:**
+**具体建议：**
 ${analysis.improvementSuggestions.map((i) => `- ${i}`).join("\n")}
 
-**Suggested Score: ${analysis.suggestedScore}/100**`;
+**建议分数：${analysis.suggestedScore}/100**`;
 
     if (customInstructions) {
-      feedback += `\n\n**Additional Notes:**\n${customInstructions}`;
+      feedback += `\n\n**补充说明：**\n${customInstructions}`;
     }
 
     return feedback;
@@ -81,10 +81,10 @@ ${analysis.improvementSuggestions.map((i) => `- ${i}`).join("\n")}
 
     // Mock response generation
     const responses = [
-      "Based on the submitted work, the student has demonstrated a good understanding of the core concepts. The solution to Question 1 is particularly well-structured.",
-      "I notice that Question 2 could benefit from more detailed explanations. The current answer covers the basic points but lacks depth in the analysis.",
-      "The examples provided in Question 3 are relevant and well-chosen. However, consider adding more context to strengthen the argument.",
-      "Overall, the assignment demonstrates effort and understanding. With some revisions to address the noted areas, this could be excellent work.",
+      "根据提交的作业，该学生对核心概念有较好的理解。第 1 题的解答结构尤为清晰。",
+      "我注意到第 2 题的解释可以更详细一些。目前的答案涵盖了基本要点，但分析深度不足。",
+      "第 3 题给出的例子相关且选用恰当，但可以考虑补充更多背景来加强论证。",
+      "总体而言，这份作业体现了学生的努力与理解。若能针对上述问题做一些修改，可以达到优秀水平。",
     ];
 
     return responses[Math.floor(Math.random() * responses.length)];
@@ -98,11 +98,11 @@ ${analysis.improvementSuggestions.map((i) => `- ${i}`).join("\n")}
 
     return {
       comparison:
-        "Comparing the submissions, Student A shows the strongest understanding of concepts, with well-structured answers. Student B has good content but needs more clarity. Student C's work requires significant revision.",
+        "对比各份提交，学生A 对概念的理解最为深入，答案结构清晰。学生B 内容不错但需要更清晰的表述。学生C 的作业需要大幅修改。",
       rankings: submissionIds.map((id, index) => ({
         submissionId: id,
         score: 90 - index * 10,
-        notes: index === 0 ? "Strongest submission" : index === 1 ? "Good effort" : "Needs revision",
+        notes: index === 0 ? "最优秀的提交" : index === 1 ? "表现良好" : "需要修改",
       })),
     };
   }
@@ -110,23 +110,23 @@ ${analysis.improvementSuggestions.map((i) => `- ${i}`).join("\n")}
   // Helper methods for generating mock analysis
   private generateSummary(request: AIAnalysisRequest): string {
     const summaries = [
-      "The student has completed the assignment with a good understanding of the main concepts. The work is well-organized and shows effort in addressing all questions.",
-      "This submission demonstrates satisfactory understanding of the material. While the basic requirements are met, there is room for improvement in depth of analysis.",
-      "The student has shown strong comprehension of the subject matter. Answers are well-reasoned and supported with appropriate examples.",
+      "学生已完成本作业，对主要概念理解较好。作业组织有序，在回答所有问题时都体现出用心。",
+      "本提交表明学生对材料有令人满意的理解。基本要求已达到，但分析的深度仍有提升空间。",
+      "学生展现出对学科内容的深入理解。答案论证充分，并配有恰当的例子作为支撑。",
     ];
     return summaries[Math.floor(Math.random() * summaries.length)];
   }
 
   private generateStrengths(): string[] {
     const allStrengths = [
-      "Clear and organized presentation",
-      "Good use of examples to support points",
-      "Demonstrates understanding of key concepts",
-      "Well-structured responses",
-      "Effective use of terminology",
-      "Logical flow of ideas",
-      "Comprehensive coverage of topics",
-      "Critical thinking evident in analysis",
+      "表述清晰、条理有序",
+      "善于用例子支撑观点",
+      "体现出对关键概念的理解",
+      "回答结构合理",
+      "术语使用得当",
+      "思路逻辑流畅",
+      "知识点覆盖全面",
+      "分析中体现了批判性思维",
     ];
     // Return 2-4 random strengths
     const count = 2 + Math.floor(Math.random() * 3);
@@ -135,14 +135,14 @@ ${analysis.improvementSuggestions.map((i) => `- ${i}`).join("\n")}
 
   private generateWeaknesses(): string[] {
     const allWeaknesses = [
-      "Some explanations lack sufficient detail",
-      "Could provide more supporting examples",
-      "Analysis could be more in-depth",
-      "Some conclusions lack supporting evidence",
-      "Organization could be improved",
-      "Minor grammatical issues",
-      "Some points need clarification",
-      "Could benefit from more critical analysis",
+      "部分解释细节不足",
+      "可以提供更多支撑性例子",
+      "分析可以更深入",
+      "部分结论缺乏证据支撑",
+      "组织结构有待改进",
+      "存在少量语法问题",
+      "某些要点需要澄清",
+      "可以加强批判性分析",
     ];
     // Return 1-3 random weaknesses
     const count = 1 + Math.floor(Math.random() * 3);
@@ -155,15 +155,15 @@ ${analysis.improvementSuggestions.map((i) => `- ${i}`).join("\n")}
   }
 
   private generateComments(): string {
-    return "Overall, this is a solid submission that demonstrates understanding of the core concepts. With some revisions to address the areas noted above, this work could be excellent.";
+    return "总体而言，这是一份扎实的提交，体现出对核心概念的理解。若能针对上述问题做一些修改，这份作业可以达到优秀水平。";
   }
 
   private generateKeyPoints(): string[] {
     return [
-      "Main concepts correctly identified",
-      "Examples are relevant and appropriate",
-      "Structure follows logical progression",
-      "Arguments are generally well-supported",
+      "准确识别了主要概念",
+      "例子相关且恰当",
+      "结构符合逻辑推进",
+      "论点总体上有充分支撑",
     ];
   }
 
@@ -178,29 +178,29 @@ ${analysis.improvementSuggestions.map((i) => `- ${i}`).join("\n")}
         questionNumber: 1,
         addressed: true,
         quality: "good",
-        notes: "Well answered with good examples",
+        notes: "回答得当，例子恰当",
       },
       {
         questionNumber: 2,
         addressed: true,
         quality: "fair",
-        notes: "Correct but lacks detail in explanations",
+        notes: "正确但解释细节不足",
       },
       {
         questionNumber: 3,
         addressed: true,
         quality: "excellent",
-        notes: "Comprehensive and well-reasoned response",
+        notes: "回答全面、论证充分",
       },
     ];
   }
 
   private generateImprovements(): string[] {
     return [
-      "Add more specific examples to support your arguments",
-      "Provide deeper analysis in Question 2",
-      "Include references to course materials where applicable",
-      "Clarify the connection between your points",
+      "增加更具体的例子来支撑你的论点",
+      "对第 2 题进行更深入的分析",
+      "在适用处引用课程材料",
+      "澄清各要点之间的联系",
     ];
   }
 }

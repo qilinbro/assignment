@@ -11,6 +11,14 @@ import { Label } from "@/components/ui/label";
 import type { AIAnalysisResult, AIChatMessage } from "@/types";
 import { format } from "date-fns";
 
+// 质量等级标签映射
+const QUALITY_LABELS: Record<string, string> = {
+  excellent: "优秀",
+  good: "良好",
+  fair: "一般",
+  poor: "较差",
+};
+
 interface AIAssistantProps {
   submissionId: string;
   assignmentTitle: string;
@@ -35,7 +43,7 @@ export function AIAssistant({
   const [isGeneratingFeedback, setIsGeneratingFeedback] = React.useState(false);
   const [generatedFeedback, setGeneratedFeedback] = React.useState("");
 
-  // Chat state
+  // 聊天状态
   const [chatMode, setChatMode] = React.useState(false);
   const [chatMessage, setChatMessage] = React.useState("");
   const [isChatting, setIsChatting] = React.useState(false);
@@ -145,24 +153,24 @@ export function AIAssistant({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-600" />
-              <CardTitle className="text-lg">AI Grading Assistant</CardTitle>
+              <CardTitle className="text-lg">AI 批改助手</CardTitle>
             </div>
             {!analysis && !isAnalyzing && (
               <Button onClick={handleAnalyze} size="sm">
                 <Sparkles className="h-4 w-4 mr-2" />
-                Analyze Submission
+                分析提交
               </Button>
             )}
           </div>
           <CardDescription>
-            Get AI-powered insights to assist with grading
+            获取 AI 洞察以辅助批改
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isAnalyzing && (
             <div className="flex flex-col items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-3" />
-              <p className="text-sm text-muted-foreground">Analyzing submission...</p>
+              <p className="text-sm text-muted-foreground">正在分析提交...</p>
             </div>
           )}
 
@@ -170,13 +178,13 @@ export function AIAssistant({
             <div className="space-y-4">
               {/* Summary */}
               <div>
-                <h4 className="font-medium mb-2">Summary</h4>
+                <h4 className="font-medium mb-2">摘要</h4>
                 <p className="text-sm text-muted-foreground">{analysis.summary}</p>
               </div>
 
               {/* Suggested Score */}
               <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <span className="text-sm font-medium">Suggested Score</span>
+                <span className="text-sm font-medium">建议分数</span>
                 <Badge variant="default" className="text-lg px-3 py-1">
                   {analysis.suggestedScore}/100
                 </Badge>
@@ -186,7 +194,7 @@ export function AIAssistant({
               <div>
                 <h4 className="font-medium mb-2 flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  Strengths
+                  优点
                 </h4>
                 <ul className="space-y-1">
                   {analysis.strengths.map((strength, i) => (
@@ -202,7 +210,7 @@ export function AIAssistant({
               <div>
                 <h4 className="font-medium mb-2 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  Areas for Improvement
+                  待改进之处
                 </h4>
                 <ul className="space-y-1">
                   {analysis.weaknesses.map((weakness, i) => (
@@ -216,11 +224,11 @@ export function AIAssistant({
 
               {/* Question Analysis */}
               <div>
-                <h4 className="font-medium mb-2">Question-by-Question Analysis</h4>
+                <h4 className="font-medium mb-2">逐题分析</h4>
                 <div className="space-y-2">
                   {analysis.questionsAddressed.map((q) => (
                     <div key={q.questionNumber} className="flex items-center justify-between p-2 border rounded">
-                      <span className="text-sm font-medium">Question {q.questionNumber}</span>
+                      <span className="text-sm font-medium">第 {q.questionNumber} 题</span>
                       <div className="flex items-center gap-2">
                         <Badge
                           variant={
@@ -229,7 +237,7 @@ export function AIAssistant({
                               : "secondary"
                           }
                         >
-                          {q.quality}
+                          {QUALITY_LABELS[q.quality] ?? q.quality}
                         </Badge>
                         <span className="text-xs text-muted-foreground">{q.notes}</span>
                       </div>
@@ -240,7 +248,7 @@ export function AIAssistant({
 
               {/* Improvement Suggestions */}
               <div>
-                <h4 className="font-medium mb-2">Suggested Improvements</h4>
+                <h4 className="font-medium mb-2">改进建议</h4>
                 <ul className="space-y-1">
                   {analysis.improvementSuggestions.map((suggestion, i) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
@@ -255,21 +263,20 @@ export function AIAssistant({
               {analysis.requiresResubmission && (
                 <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                   <p className="text-sm text-amber-700 dark:text-amber-300">
-                    <strong>AI Recommendation:</strong> This submission may benefit from
-                    resubmission to address the identified areas.
+                    <strong>AI 建议：</strong>本提交可能需要重新提交，以改进上述指出的方面。
                   </p>
                 </div>
               )}
 
               {/* Confidence Score */}
               <div className="text-xs text-muted-foreground">
-                Analysis confidence: {Math.round(analysis.confidence * 100)}%
+                分析置信度：{Math.round(analysis.confidence * 100)}%
               </div>
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-2 border-t">
                 <Button onClick={handleApplyAnalysis} variant="default" size="sm">
-                  Apply Suggestions
+                  应用建议
                 </Button>
                 <Button
                   onClick={() => setChatMode(true)}
@@ -277,7 +284,7 @@ export function AIAssistant({
                   size="sm"
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
-                  Chat with AI
+                  与 AI 对话
                 </Button>
               </div>
             </div>
@@ -286,7 +293,7 @@ export function AIAssistant({
           {chatMode && (
             <div className="space-y-4">
               <Button onClick={() => setChatMode(false)} variant="ghost" size="sm">
-                ← Back to Analysis
+                ← 返回分析
               </Button>
 
               {/* Chat Messages */}
@@ -324,7 +331,7 @@ export function AIAssistant({
               {/* Chat Input */}
               <div className="flex gap-2">
                 <Input
-                  placeholder="Ask about this submission..."
+                  placeholder="就本提交提问..."
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}

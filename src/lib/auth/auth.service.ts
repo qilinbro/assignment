@@ -36,31 +36,31 @@ class MockAuthService implements AuthService {
   private mockUsers: AuthUser[] = [
     {
       id: "admin-1",
-      name: "Admin User",
+      name: "管理员",
       email: "admin@example.com",
       role: "ADMIN",
     },
     {
       id: "ta-1",
-      name: "TA 01",
+      name: "助教01",
       email: "ta01@example.com",
       role: "TA",
     },
     {
       id: "ta-2",
-      name: "TA 02",
+      name: "助教02",
       email: "ta02@example.com",
       role: "TA",
     },
     {
       id: "student-1",
-      name: "Student A",
+      name: "学生A",
       email: "student.a@example.com",
       role: "STUDENT",
     },
     {
       id: "student-2",
-      name: "Student B",
+      name: "学生B",
       email: "student.b@example.com",
       role: "STUDENT",
     },

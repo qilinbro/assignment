@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Error submitting feedback:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to submit feedback" },
+      { error: error.message || "提交反馈失败" },
       { status: 400 }
     );
   }
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     if (!submissionId) {
       return NextResponse.json(
-        { error: "submissionId is required" },
+        { error: "submissionId 为必填项" },
         { status: 400 }
       );
     }
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching feedback:", error);
     return NextResponse.json(
-      { error: "Failed to fetch feedback" },
+      { error: "获取反馈失败" },
       { status: 500 }
     );
   }

@@ -30,7 +30,7 @@ export function ImagePreview({ files, className }: ImagePreviewProps) {
   if (files.length === 0) {
     return (
       <div className={cn("text-center py-8", className)}>
-        <p className="text-muted-foreground">No images uploaded</p>
+        <p className="text-muted-foreground">暂无图片</p>
       </div>
     );
   }
@@ -83,7 +83,7 @@ export function ImagePreview({ files, className }: ImagePreviewProps) {
             size="icon"
             variant="secondary"
             onClick={handleDownload}
-            title="Download"
+            title="下载"
           >
             <Download className="h-4 w-4" />
           </Button>
@@ -91,7 +91,7 @@ export function ImagePreview({ files, className }: ImagePreviewProps) {
             size="icon"
             variant="secondary"
             onClick={() => setIsFullscreen(true)}
-            title="Fullscreen"
+            title="全屏"
           >
             <ZoomIn className="h-4 w-4" />
           </Button>
@@ -160,7 +160,7 @@ export function ImagePreview({ files, className }: ImagePreviewProps) {
       {/* Fullscreen Dialog */}
       <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
         <DialogContent className="max-w-[90vw] max-h-[90vh] p-0">
-          <DialogTitle className="sr-only">Image Fullscreen View</DialogTitle>
+          <DialogTitle className="sr-only">图片全屏查看</DialogTitle>
           <div
             className="relative w-full h-full flex items-center justify-center bg-black"
             onKeyDown={handleKeyDown}

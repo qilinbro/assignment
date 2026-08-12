@@ -9,22 +9,30 @@ import { Badge } from "@/components/ui/badge";
 import { ImagePreview } from "@/components/submission/image-preview";
 import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
+import type { SubmissionStatus } from "@/types";
 
-// Mock data
+// 模拟数据
 const mockSubmission = {
   id: "submission-1",
   assignmentId: "assignment-week-1",
-  assignmentTitle: "Week 1 Homework",
+  assignmentTitle: "第一周作业",
   studentId: "student-1",
   submittedAt: "2024-08-12T14:20:00",
-  status: "COMPLETED",
+  status: "COMPLETED" as SubmissionStatus,
   files: [
     {
       id: "file-1",
-      url: "/uploads/submission-1-1.jpg",
-      fileName: "homework.jpg",
-      fileType: "image/jpeg",
-      size: 1024000,
+      url: "/uploads/student-1-app.png",
+      fileName: "应用文.png",
+      fileType: "image/png",
+      size: 340207,
+    },
+    {
+      id: "file-1-2",
+      url: "/uploads/student-1-read.png",
+      fileName: "读后续.png",
+      fileType: "image/png",
+      size: 522688,
     },
   ],
 };
@@ -32,18 +40,18 @@ const mockSubmission = {
 const mockFeedback = [
   {
     id: "feedback-1",
-    taName: "TA 01",
+    taName: "助教01",
     score: 85,
     comment:
-      "The solution to Question 1 is correct. Please revise Questions 2 and 3 for better clarity.",
+      "第 1 题解答正确。第 2、3 题请修改，使表达更清晰。",
     requireResubmission: false,
     files: [],
   },
   {
     id: "feedback-2",
-    taName: "TA 03",
+    taName: "助教03",
     score: 90,
-    comment: "Good work overall. Clear explanations and well-structured answers.",
+    comment: "整体表现不错。解释清晰，答案结构合理。",
     requireResubmission: false,
     files: [],
   },
@@ -67,7 +75,7 @@ export default function StudentAssignmentDetailPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Assignment Details</h1>
+              <h1 className="text-2xl font-bold">作业详情</h1>
               <p className="text-sm text-muted-foreground">{mockSubmission.assignmentTitle}</p>
             </div>
           </div>
@@ -83,10 +91,10 @@ export default function StudentAssignmentDetailPage() {
                 <CheckCircle className="h-6 w-6 text-green-600 mt-1" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-green-900 dark:text-green-100 mb-1">
-                    Submission Completed
+                    提交已完成
                   </h3>
                   <p className="text-sm text-green-700 dark:text-green-300">
-                    Your assignment has been graded and feedback is available
+                    你的作业已批改完成，可以查看反馈
                   </p>
                 </div>
                 <StatusBadge status={mockSubmission.status} />
@@ -97,20 +105,20 @@ export default function StudentAssignmentDetailPage() {
           {/* Submission Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Submission Information</CardTitle>
+              <CardTitle>提交信息</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Submitted by:</span>
-                  <span className="font-medium">Student A</span>
+                  <span className="text-muted-foreground">提交人：</span>
+                  <span className="font-medium">学生A</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Submitted at:</span>
+                  <span className="text-muted-foreground">提交时间：</span>
                   <span className="font-medium">
-                    {format(new Date(mockSubmission.submittedAt), "MMM dd, yyyy 'at' HH:mm")}
+                    {format(new Date(mockSubmission.submittedAt), "yyyy年MM月dd日 HH:mm")}
                   </span>
                 </div>
               </div>
@@ -120,8 +128,8 @@ export default function StudentAssignmentDetailPage() {
           {/* Submitted Files */}
           <Card>
             <CardHeader>
-              <CardTitle>Your Submission</CardTitle>
-              <CardDescription>Files you uploaded for this assignment</CardDescription>
+              <CardTitle>我的提交</CardTitle>
+              <CardDescription>你为本作业上传的文件</CardDescription>
             </CardHeader>
             <CardContent>
               <ImagePreview files={mockSubmission.files} />
@@ -131,9 +139,9 @@ export default function StudentAssignmentDetailPage() {
           {/* TA Feedback */}
           <Card>
             <CardHeader>
-              <CardTitle>Grading Results</CardTitle>
+              <CardTitle>批改结果</CardTitle>
               <CardDescription>
-                Feedback from {mockFeedback.length} Teaching Assistant(s)
+                {mockFeedback.length} 名助教的反馈
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -146,7 +154,7 @@ export default function StudentAssignmentDetailPage() {
                           <User className="h-4 w-4" />
                           <span className="font-medium">{feedback.taName}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground">Teaching Assistant</p>
+                        <p className="text-sm text-muted-foreground">助教</p>
                       </div>
                       <Badge variant="outline" className="text-lg px-3 py-1">
                         {feedback.score}/100
@@ -156,8 +164,7 @@ export default function StudentAssignmentDetailPage() {
                     {feedback.requireResubmission && (
                       <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
                         <p className="text-sm text-amber-700 dark:text-amber-300">
-                          <strong>Resubmission Required:</strong> Please revise based on the
-                          feedback provided.
+                          <strong>需要重新提交：</strong>请根据反馈进行修改。
                         </p>
                       </div>
                     )}
@@ -167,7 +174,7 @@ export default function StudentAssignmentDetailPage() {
                 {/* Average Score */}
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">Average Score</span>
+                    <span className="font-medium">平均分</span>
                     <Badge variant="default" className="text-lg px-3 py-1">
                       {(mockFeedback.reduce((acc, f) => acc + f.score, 0) / mockFeedback.length).toFixed(1)}/100
                     </Badge>
@@ -180,7 +187,7 @@ export default function StudentAssignmentDetailPage() {
           {/* Actions */}
           <div className="flex gap-3">
             <Button variant="outline" onClick={() => router.push("/student")}>
-              Back to Dashboard
+              返回控制台
             </Button>
           </div>
         </div>

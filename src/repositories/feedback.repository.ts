@@ -27,16 +27,8 @@ class MockFeedbackRepository implements IFeedbackRepository {
       submissionAssignmentId: "sa-1",
       score: 85,
       comment:
-        "The solution to Question 1 is correct. Please revise Questions 2 and 3.",
-      files: [
-        {
-          id: "fb-file-1",
-          url: "/uploads/feedback-1-1.jpg",
-          fileName: "feedback.jpg",
-          fileType: "image/jpeg",
-          size: 512000,
-        },
-      ],
+        "第 1 题解答正确。第 2、3 题请修改。",
+      files: [],
       requireResubmission: false,
       createdAt: new Date("2024-08-12T16:00:00"),
     };
@@ -45,7 +37,7 @@ class MockFeedbackRepository implements IFeedbackRepository {
       id: "feedback-2",
       submissionAssignmentId: "sa-2",
       score: 90,
-      comment: "Good work overall. Clear explanations.",
+      comment: "整体表现不错。解释清晰。",
       files: [],
       requireResubmission: false,
       createdAt: new Date("2024-08-12T16:30:00"),
@@ -56,16 +48,8 @@ class MockFeedbackRepository implements IFeedbackRepository {
       submissionAssignmentId: "sa-3",
       score: 78,
       comment:
-        "Some concepts need clarification. Please review the feedback and resubmit.",
-      files: [
-        {
-          id: "fb-file-2",
-          url: "/uploads/feedback-3-1.pdf",
-          fileName: "detailed-feedback.pdf",
-          fileType: "application/pdf",
-          size: 204800,
-        },
-      ],
+        "部分概念需要澄清。请查看反馈并重新提交。",
+      files: [],
       requireResubmission: true,
       createdAt: new Date("2024-08-12T17:00:00"),
     };
@@ -74,7 +58,7 @@ class MockFeedbackRepository implements IFeedbackRepository {
       id: "feedback-4",
       submissionAssignmentId: "sa-4",
       score: 88,
-      comment: "Well-structured answer. Good examples.",
+      comment: "答案结构合理，例子恰当。",
       files: [],
       requireResubmission: false,
       createdAt: new Date("2024-08-12T17:30:00"),

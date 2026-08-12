@@ -29,14 +29,14 @@ export function FileUpload({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): string | null => {
-    // Check file type
+    // 检查文件类型
     if (accept && !accept.split(",").includes(file.type)) {
-      return `Invalid file type: ${file.type}. Only ${accept.replace(/,/g, ", ")} are allowed.`;
+      return `文件类型无效：${file.type}。仅允许 ${accept.replace(/,/g, ", ")}。`;
     }
 
-    // Check file size
+    // 检查文件大小
     if (file.size > maxSizeMB * 1024 * 1024) {
-      return `File too large. Maximum size is ${maxSizeMB}MB.`;
+      return `文件过大。最大允许 ${maxSizeMB}MB。`;
     }
 
     return null;
@@ -72,7 +72,7 @@ export function FileUpload({
     });
 
     if (files.length + newFiles.length > maxFiles) {
-      setError(`Maximum ${maxFiles} files allowed.`);
+      setError(`最多允许 ${maxFiles} 个文件。`);
       return;
     }
 
@@ -131,13 +131,13 @@ export function FileUpload({
         <CardContent className="flex flex-col items-center justify-center py-10">
           <Upload className="h-10 w-10 text-muted-foreground mb-4" />
           <p className="text-sm font-medium text-foreground mb-2">
-            Click to upload or drag and drop
+            点击上传或拖拽文件到此处
           </p>
           <p className="text-xs text-muted-foreground mb-4">
-            {accept.split(",").join(", ").toUpperCase()} (max {maxSizeMB}MB each)
+            {accept.split(",").join(", ").toUpperCase()}（每个不超过 {maxSizeMB}MB）
           </p>
           <p className="text-xs text-muted-foreground">
-            Up to {maxFiles} files
+            最多 {maxFiles} 个文件
           </p>
         </CardContent>
       </Card>
@@ -148,7 +148,7 @@ export function FileUpload({
 
       {files.length > 0 && (
         <div className="mt-4 space-y-2">
-          <p className="text-sm font-medium">{files.length} file(s) selected</p>
+          <p className="text-sm font-medium">已选择 {files.length} 个文件</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {files.map((file, index) => (
               <div

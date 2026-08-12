@@ -17,13 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Mock TAs - in a real app, this would come from an API
+// 模拟助教 - 实际应用中应来自 API
 const mockTAs = [
-  { id: "ta-1", name: "TA 01" },
-  { id: "ta-2", name: "TA 02" },
-  { id: "ta-3", name: "TA 03" },
-  { id: "ta-4", name: "TA 04" },
-  { id: "ta-5", name: "TA 05" },
+  { id: "ta-1", name: "助教01" },
+  { id: "ta-2", name: "助教02" },
+  { id: "ta-3", name: "助教03" },
+  { id: "ta-4", name: "助教04" },
+  { id: "ta-5", name: "助教05" },
 ];
 
 export default function CreateAssignmentPage() {
@@ -50,34 +50,34 @@ export default function CreateAssignmentPage() {
       taCount: parseInt(formData.get("taCount") as string),
       allowResubmission: formData.get("allowResubmission") === "true",
       resubmissionDescription: formData.get("resubmissionDescription") as string,
-      createdBy: "admin-1", // In a real app, this would come from auth
+      createdBy: "admin-1", // 实际应用中应来自认证信息
     };
 
-    // Validate
+    // 校验
     if (!assignmentData.title || !assignmentData.deadline) {
-      alert("Please fill in all required fields");
+      alert("请填写所有必填项");
       setIsSubmitting(false);
       return;
     }
 
     if (selectedTAs.length === 0) {
-      alert("Please select at least one TA");
+      alert("请至少选择一名助教");
       setIsSubmitting(false);
       return;
     }
 
     if (assignmentData.taCount > selectedTAs.length) {
-      alert("TA count cannot exceed the number of selected TAs");
+      alert("助教数量不能超过所选助教的总数");
       setIsSubmitting(false);
       return;
     }
 
-    // Simulate API call
+    // 模拟 API 调用
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     console.log("Creating assignment:", assignmentData);
 
-    // In a real app, we would call the API
+    // 实际应用中会调用 API
     // const result = await assignmentService.createAssignment(assignmentData);
 
     setIsSubmitting(false);
@@ -102,9 +102,9 @@ export default function CreateAssignmentPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold">Create Assignment</h1>
+              <h1 className="text-2xl font-bold">创建作业</h1>
               <p className="text-sm text-muted-foreground">
-                Set up a new assignment with TA allocation
+                新建作业并分配助教
               </p>
             </div>
           </div>
@@ -117,34 +117,34 @@ export default function CreateAssignmentPage() {
             {/* Basic Information */}
             <Card>
               <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
+                <CardTitle>基本信息</CardTitle>
                 <CardDescription>
-                  Enter the basic details for this assignment
+                  填写本作业的基本信息
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Assignment Title *</Label>
+                  <Label htmlFor="title">作业标题 *</Label>
                   <Input
                     id="title"
                     name="title"
-                    placeholder="e.g., Week 3 Homework"
+                    placeholder="例如：第三周作业"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">作业描述</Label>
                   <Textarea
                     id="description"
                     name="description"
-                    placeholder="Enter assignment instructions..."
+                    placeholder="请输入作业说明..."
                     rows={4}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="deadline">Deadline *</Label>
+                  <Label htmlFor="deadline">截止时间 *</Label>
                   <Input
                     id="deadline"
                     name="deadline"
@@ -153,7 +153,7 @@ export default function CreateAssignmentPage() {
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Students will not be able to submit after this time
+                    超过此时间后，学生将无法提交
                   </p>
                 </div>
               </CardContent>
@@ -162,14 +162,14 @@ export default function CreateAssignmentPage() {
             {/* TA Selection */}
             <Card>
               <CardHeader>
-                <CardTitle>TA Allocation</CardTitle>
+                <CardTitle>助教分配</CardTitle>
                 <CardDescription>
-                  Select participating TAs and set allocation count
+                  选择参与的助教并设置分配数量
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Participating TAs *</Label>
+                  <Label>参与的助教 *</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {mockTAs.map((ta) => (
                       <button
@@ -188,35 +188,35 @@ export default function CreateAssignmentPage() {
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {selectedTAs.length} TA(s) selected
+                    已选择 {selectedTAs.length} 名助教
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="taCount">Number of TAs per submission *</Label>
+                  <Label htmlFor="taCount">每份提交分配的助教数 *</Label>
                   <Select name="taCount" defaultValue="2" required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select number" />
+                      <SelectValue placeholder="请选择数量" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1 TA per submission</SelectItem>
-                      <SelectItem value="2">2 TAs per submission</SelectItem>
-                      <SelectItem value="3">3 TAs per submission</SelectItem>
-                      <SelectItem value="4">4 TAs per submission</SelectItem>
-                      <SelectItem value="5">5 TAs per submission</SelectItem>
+                      <SelectItem value="1">每份提交 1 名助教</SelectItem>
+                      <SelectItem value="2">每份提交 2 名助教</SelectItem>
+                      <SelectItem value="3">每份提交 3 名助教</SelectItem>
+                      <SelectItem value="4">每份提交 4 名助教</SelectItem>
+                      <SelectItem value="5">每份提交 5 名助教</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Each submission will be randomly assigned to this many TAs
+                    每份提交将被随机分配给相应数量的助教
                   </p>
                 </div>
 
                 {selectedTAs.length > 0 && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                     <p className="text-sm">
-                      <strong>Allocation summary:</strong> Each student submission will be
-                      randomly assigned to <strong>2</strong> TAs from the{" "}
-                      <strong>{selectedTAs.length}</strong> selected TAs.
+                      <strong>分配概要：</strong>每份学生提交将从{" "}
+                      <strong>{selectedTAs.length}</strong> 名所选助教中随机分配给{" "}
+                      <strong>2</strong> 名助教批改。
                     </p>
                   </div>
                 )}
@@ -226,40 +226,40 @@ export default function CreateAssignmentPage() {
             {/* Resubmission Settings */}
             <Card>
               <CardHeader>
-                <CardTitle>Resubmission Settings</CardTitle>
+                <CardTitle>重新提交设置</CardTitle>
                 <CardDescription>
-                  Configure resubmission permissions and instructions
+                  配置重新提交的权限与说明
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="allowResubmission">Allow Resubmission</Label>
+                  <Label htmlFor="allowResubmission">允许重新提交</Label>
                   <Select name="allowResubmission" defaultValue="true">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="true">Yes, allow resubmissions</SelectItem>
-                      <SelectItem value="false">No, do not allow resubmissions</SelectItem>
+                      <SelectItem value="true">是，允许重新提交</SelectItem>
+                      <SelectItem value="false">否，不允许重新提交</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Students can submit revised work if TAs require it
+                    当助教要求时，学生可以提交修改后的作业
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="resubmissionDescription">
-                    Resubmission Instructions
+                    重新提交说明
                   </Label>
                   <Textarea
                     id="resubmissionDescription"
                     name="resubmissionDescription"
-                    placeholder="Explain what students should include in their resubmission..."
+                    placeholder="说明学生重新提交时应包含的内容..."
                     rows={3}
                   />
                   <p className="text-xs text-muted-foreground">
-                    These instructions will be shown to students when they resubmit
+                    这些说明将在学生重新提交时显示
                   </p>
                 </div>
               </CardContent>
@@ -269,12 +269,12 @@ export default function CreateAssignmentPage() {
             <div className="flex justify-end gap-3">
               <Link href="/admin">
                 <Button variant="outline" type="button">
-                  Cancel
+                  取消
                 </Button>
               </Link>
               <Button type="submit" disabled={isSubmitting}>
                 <Save className="h-4 w-4 mr-2" />
-                {isSubmitting ? "Creating..." : "Create Assignment"}
+                {isSubmitting ? "创建中..." : "创建作业"}
               </Button>
             </div>
           </div>

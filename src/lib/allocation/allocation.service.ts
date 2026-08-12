@@ -45,21 +45,21 @@ class MockAllocationService implements AllocationService {
     if (taIds.length === 0) {
       return {
         valid: false,
-        error: "At least one TA must be available for allocation",
+        error: "至少需要一名可用的助教来进行分配",
       };
     }
 
     if (taCount <= 0) {
       return {
         valid: false,
-        error: "TA count must be greater than 0",
+        error: "助教数量必须大于 0",
       };
     }
 
     if (taCount > taIds.length) {
       return {
         valid: false,
-        error: `TA count (${taCount}) cannot exceed the number of available TAs (${taIds.length})`,
+        error: `助教数量（${taCount}）不能超过可用助教的数量（${taIds.length}）`,
       };
     }
 
@@ -86,7 +86,7 @@ class MockAllocationService implements AllocationService {
     if (!validation.valid) {
       return {
         success: false,
-        message: validation.error || "Invalid allocation parameters",
+        message: validation.error || "无效的分配参数",
       };
     }
 
@@ -95,7 +95,7 @@ class MockAllocationService implements AllocationService {
     if (!submission) {
       return {
         success: false,
-        message: "Submission not found",
+        message: "未找到提交",
       };
     }
 
@@ -104,7 +104,7 @@ class MockAllocationService implements AllocationService {
     if (!assignment) {
       return {
         success: false,
-        message: "Assignment not found",
+        message: "未找到作业",
       };
     }
 
@@ -128,7 +128,7 @@ class MockAllocationService implements AllocationService {
 
     return {
       success: true,
-      message: `Successfully assigned ${selectedTAIds.length} TAs to submission`,
+      message: `已成功为提交分配 ${selectedTAIds.length} 名助教`,
       assignedTAs: selectedTAIds,
       submissionAssignmentIds: assignmentIds,
     };
@@ -158,7 +158,7 @@ class MockAllocationService implements AllocationService {
   async getAssignmentStatistics(assignmentId: string) {
     const assignment = await assignmentRepository.findById(assignmentId);
     if (!assignment) {
-      throw new Error("Assignment not found");
+      throw new Error("未找到作业");
     }
 
     const submissions = await submissionRepository.findByAssignmentId(
@@ -209,7 +209,7 @@ class MockAllocationService implements AllocationService {
     if (!submission) {
       return {
         success: false,
-        message: "Submission not found",
+        message: "未找到提交",
       };
     }
 
@@ -219,7 +219,7 @@ class MockAllocationService implements AllocationService {
     if (!assignment) {
       return {
         success: false,
-        message: "Assignment not found",
+        message: "未找到作业",
       };
     }
 
@@ -246,7 +246,7 @@ class MockAllocationService implements AllocationService {
 
     return {
       success: true,
-      message: `Successfully reassigned submission to ${newTaIds.length} TAs`,
+      message: `已成功将提交重新分配给 ${newTaIds.length} 名助教`,
       assignedTAs: newTaIds,
       submissionAssignmentIds: assignmentIds,
     };

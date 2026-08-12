@@ -36,7 +36,7 @@ class FeedbackService implements IFeedbackService {
     const submissionAssignment =
       await submissionRepository.findAssignmentById(data.submissionAssignmentId);
     if (!submissionAssignment) {
-      throw new Error("Submission assignment not found");
+      throw new Error("未找到提交分配");
     }
 
     // Check if grading has already been completed
@@ -44,19 +44,19 @@ class FeedbackService implements IFeedbackService {
       submissionAssignment.status === "COMPLETED" ||
       submissionAssignment.status === "RESUBMISSION_REQUIRED"
     ) {
-      throw new Error("Grading has already been completed for this assignment");
+      throw new Error("本作业已完成批改");
     }
 
     // Validate score if provided
     if (data.score !== undefined) {
       if (data.score < 0 || data.score > 100) {
-        throw new Error("Score must be between 0 and 100");
+        throw new Error("分数必须在 0 到 100 之间");
       }
     }
 
     // Validate that at least a comment or score is provided
     if (!data.score && !data.comment) {
-      throw new Error("Either a score or comment must be provided");
+      throw new Error("必须提供分数或评语");
     }
 
     return await feedbackRepository.create(data);
@@ -96,13 +96,13 @@ class FeedbackService implements IFeedbackService {
   ): Promise<Feedback | null> {
     const existingFeedback = await feedbackRepository.findById(id);
     if (!existingFeedback) {
-      throw new Error("Feedback not found");
+      throw new Error("未找到反馈");
     }
 
     // Validate score if being updated
     if (data.score !== undefined) {
       if (data.score < 0 || data.score > 100) {
-        throw new Error("Score must be between 0 and 100");
+        throw new Error("分数必须在 0 到 100 之间");
       }
     }
 
@@ -112,7 +112,7 @@ class FeedbackService implements IFeedbackService {
   async deleteFeedback(id: string): Promise<boolean> {
     const feedback = await feedbackRepository.findById(id);
     if (!feedback) {
-      throw new Error("Feedback not found");
+      throw new Error("未找到反馈");
     }
 
     // Check if the submission assignment is still in grading status
@@ -122,7 +122,7 @@ class FeedbackService implements IFeedbackService {
       );
 
     if (!submissionAssignment) {
-      throw new Error("Submission assignment not found");
+      throw new Error("未找到提交分配");
     }
 
     // Only allow deletion if grading hasn't been completed
@@ -131,7 +131,7 @@ class FeedbackService implements IFeedbackService {
       submissionAssignment.status === "RESUBMISSION_REQUIRED"
     ) {
       throw new Error(
-        "Cannot delete feedback for completed grading. Create a new feedback instead."
+        "无法删除已完成批改的反馈，请新建一条反馈。"
       );
     }
 
@@ -150,19 +150,19 @@ class FeedbackService implements IFeedbackService {
     const submissionAssignment =
       await submissionRepository.findAssignmentById(data.submissionAssignmentId);
     if (!submissionAssignment) {
-      throw new Error("Submission assignment not found");
+      throw new Error("未找到提交分配");
     }
 
     // Validate score if provided
     if (data.score !== undefined) {
       if (data.score < 0 || data.score > 100) {
-        throw new Error("Score must be between 0 and 100");
+        throw new Error("分数必须在 0 到 100 之间");
       }
     }
 
     // Validate that at least a comment or score is provided
     if (!data.score && !data.comment) {
-      throw new Error("Either a score or comment must be provided");
+      throw new Error("必须提供分数或评语");
     }
 
     // Create the feedback
@@ -237,7 +237,7 @@ class FeedbackService implements IFeedbackService {
           submissionAssignment: assignment,
           ta: {
             id: assignment.taId,
-            name: `TA ${assignment.taId.split("-")[1]}`,
+            name: `助教${assignment.taId.split("-")[1]}`,
           },
         });
       }

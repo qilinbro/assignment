@@ -4,14 +4,15 @@ import { assignmentService } from "@/lib/assignment";
 // GET /api/assignments/:id - Get assignment details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const assignment = await assignmentService.getAssignment(params.id);
+    const { id } = await params;
+    const assignment = await assignmentService.getAssignment(id);
 
     if (!assignment) {
       return NextResponse.json(
-        { error: "Assignment not found" },
+        { error: "未找到作业" },
         { status: 404 }
       );
     }
@@ -20,7 +21,7 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching assignment:", error);
     return NextResponse.json(
-      { error: "Failed to fetch assignment" },
+      { error: "获取作业失败" },
       { status: 500 }
     );
   }
@@ -29,12 +30,13 @@ export async function GET(
 // PUT /api/assignments/:id - Update an assignment
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
+    const { id } = await params;
 
-    const assignment = await assignmentService.updateAssignment(params.id, {
+    const assignment = await assignmentService.updateAssignment(id, {
       title: body.title,
       description: body.description,
       deadline: body.deadline ? new Date(body.deadline) : undefined,
@@ -46,7 +48,7 @@ export async function PUT(
 
     if (!assignment) {
       return NextResponse.json(
-        { error: "Assignment not found" },
+        { error: "未找到作业" },
         { status: 404 }
       );
     }
@@ -55,7 +57,7 @@ export async function PUT(
   } catch (error: any) {
     console.error("Error updating assignment:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to update assignment" },
+      { error: error.message || "更新作业失败" },
       { status: 400 }
     );
   }
@@ -64,14 +66,15 @@ export async function PUT(
 // DELETE /api/assignments/:id - Delete an assignment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const deleted = await assignmentService.deleteAssignment(params.id);
+    const { id } = await params;
+    const deleted = await assignmentService.deleteAssignment(id);
 
     if (!deleted) {
       return NextResponse.json(
-        { error: "Assignment not found" },
+        { error: "未找到作业" },
         { status: 404 }
       );
     }
@@ -80,7 +83,7 @@ export async function DELETE(
   } catch (error: any) {
     console.error("Error deleting assignment:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to delete assignment" },
+      { error: error.message || "删除作业失败" },
       { status: 400 }
     );
   }

@@ -10,20 +10,20 @@ import { FileUpload } from "@/components/submission/file-upload";
 import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
 
-// Mock assignment data - in a real app, this would come from an API
+// 模拟作业数据 - 实际应用中应来自 API
 const mockAssignment = {
   id: "assignment-week-1",
-  title: "Week 1 Homework",
-  description: `Complete the following exercises:
+  title: "第一周作业",
+  description: `请完成以下练习：
 
-1. Read Chapter 1 and answer the comprehension questions
-2. Write a 200-word reflection on the key concepts
-3. Complete the practice problems at the end of the chapter
+1. 阅读第一章并回答理解性问题
+2. 围绕核心概念撰写 200 字的读书感悟
+3. 完成本章末尾的练习题
 
-Submit your work as clear images or PDFs. Ensure all text is readable.`,
+请以清晰的图片或 PDF 形式提交作业，确保所有文字清晰可读。`,
   deadline: "2026-08-20T23:59:59",
   allowResubmission: true,
-  resubmissionDescription: "Please explain what you revised based on the TA feedback",
+  resubmissionDescription: "请说明你根据助教反馈做了哪些修改",
 };
 
 export default function AssignmentPage() {
@@ -32,9 +32,13 @@ export default function AssignmentPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
   const [hasSubmitted, setHasSubmitted] = React.useState(false);
-  const [submission, setSubmission] = React.useState({
+  const [submission, setSubmission] = React.useState<{
+    id: string;
+    status: "PENDING" | "GRADING" | "COMPLETED" | "RESUBMISSION_REQUIRED" | "RESUBMITTED";
+    submittedAt: string;
+  }>({
     id: "submission-1",
-    status: "COMPLETED" as const,
+    status: "COMPLETED",
     submittedAt: "2024-08-12T14:20:00",
   });
 
@@ -42,26 +46,26 @@ export default function AssignmentPage() {
 
   const handleSubmit = async () => {
     if (uploadedFiles.length === 0) {
-      alert("Please upload at least one file");
+      alert("请至少上传一个文件");
       return;
     }
 
     setIsSubmitting(true);
 
-    // Simulate API call
+    // 模拟 API 调用
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     console.log("Submitting files:", uploadedFiles);
 
-    // In a real app, we would:
-    // 1. Upload files to storage
-    // 2. Create submission via API
-    // 3. Redirect to success page
+    // 实际应用中会：
+    // 1. 上传文件到存储
+    // 2. 通过 API 创建提交
+    // 3. 跳转到成功页面
 
     setHasSubmitted(true);
     setSubmission({
       id: `submission-${Date.now()}`,
-      status: "SUBMITTED",
+      status: "PENDING",
       submittedAt: new Date().toISOString(),
     });
 
@@ -80,12 +84,12 @@ export default function AssignmentPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <Badge variant="outline" className="mb-2">Assignment</Badge>
+              <Badge variant="outline" className="mb-2">作业</Badge>
               <h1 className="text-2xl font-bold">{mockAssignment.title}</h1>
               <p className="text-sm text-muted-foreground">{mockAssignment.id}</p>
             </div>
             <Button variant="outline" onClick={() => router.push("/")}>
-              Back to Home
+              返回首页
             </Button>
           </div>
         </div>
@@ -98,15 +102,15 @@ export default function AssignmentPage() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle>Assignment Details</CardTitle>
-                  <CardDescription>Review the requirements before submitting</CardDescription>
+                  <CardTitle>作业详情</CardTitle>
+                  <CardDescription>提交前请先查看作业要求</CardDescription>
                 </div>
                 {hasSubmitted ? (
                   <StatusBadge status={submission.status} />
                 ) : isDeadlinePassed ? (
-                  <Badge variant="destructive">Closed</Badge>
+                  <Badge variant="destructive">已截止</Badge>
                 ) : (
-                  <Badge variant="default">Open</Badge>
+                  <Badge variant="default">进行中</Badge>
                 )}
               </div>
             </CardHeader>
@@ -118,15 +122,15 @@ export default function AssignmentPage() {
               <div className="flex items-center gap-4 pt-4 border-t">
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Deadline:</span>
+                  <span className="text-muted-foreground">截止时间：</span>
                   <span className={isDeadlinePassed ? "text-destructive font-medium" : ""}>
-                    {format(new Date(mockAssignment.deadline), "MMM dd, yyyy 'at' HH:mm")}
+                    {format(new Date(mockAssignment.deadline), "yyyy年MM月dd日 HH:mm")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">
-                    {mockAssignment.allowResubmission ? "Resubmissions allowed" : "No resubmissions"}
+                    {mockAssignment.allowResubmission ? "允许重新提交" : "不允许重新提交"}
                   </span>
                 </div>
               </div>
@@ -141,10 +145,10 @@ export default function AssignmentPage() {
                   <CheckCircle className="h-6 w-6 text-green-600" />
                   <div>
                     <CardTitle className="text-green-900 dark:text-green-100">
-                      Submission Successful
+                      提交成功
                     </CardTitle>
                     <CardDescription className="text-green-700 dark:text-green-300">
-                      Your assignment has been submitted and is awaiting TA review
+                      你的作业已提交，正在等待助教批阅
                     </CardDescription>
                   </div>
                 </div>
@@ -152,16 +156,16 @@ export default function AssignmentPage() {
               <CardContent>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Submission ID:</span>
+                    <span className="text-muted-foreground">提交编号：</span>
                     <span className="font-mono">{submission.id}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Submitted at:</span>
-                    <span>{format(new Date(submission.submittedAt), "MMM dd, yyyy 'at' HH:mm")}</span>
+                    <span className="text-muted-foreground">提交时间：</span>
+                    <span>{format(new Date(submission.submittedAt), "yyyy年MM月dd日 HH:mm")}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Files uploaded:</span>
-                    <span>{uploadedFiles.length} file(s)</span>
+                    <span className="text-muted-foreground">已上传文件：</span>
+                    <span>{uploadedFiles.length} 个文件</span>
                   </div>
                 </div>
 
@@ -169,7 +173,7 @@ export default function AssignmentPage() {
                   <div className="mt-4 pt-4 border-t border-green-200">
                     <Button variant="outline" size="sm">
                       <FileText className="h-4 w-4 mr-2" />
-                      View Feedback
+                      查看反馈
                     </Button>
                   </div>
                 )}
@@ -181,9 +185,9 @@ export default function AssignmentPage() {
           {!hasSubmitted && !isDeadlinePassed && (
             <Card>
               <CardHeader>
-                <CardTitle>Submit Assignment</CardTitle>
+                <CardTitle>提交作业</CardTitle>
                 <CardDescription>
-                  Upload your assignment files (JPG, PNG, WEBP - max 10MB each)
+                  上传你的作业文件（JPG、PNG、WEBP - 每个不超过 10MB）
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -196,12 +200,12 @@ export default function AssignmentPage() {
                   />
 
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">Submission Guidelines:</h4>
+                    <h4 className="font-medium mb-2">提交须知：</h4>
                     <ul className="text-sm space-y-1 text-muted-foreground">
-                      <li>• Ensure all images are clear and readable</li>
-                      <li>• Use proper lighting when taking photos</li>
-                      <li>• Include all pages of your work</li>
-                      <li>• Double-check before submitting</li>
+                      <li>• 确保所有图片清晰可读</li>
+                      <li>• 拍照时注意光线充足</li>
+                      <li>• 包含作业的所有页面</li>
+                      <li>• 提交前请仔细检查</li>
                     </ul>
                   </div>
 
@@ -211,7 +215,7 @@ export default function AssignmentPage() {
                     className="w-full"
                     size="lg"
                   >
-                    {isSubmitting ? "Submitting..." : "Submit Assignment"}
+                    {isSubmitting ? "提交中..." : "提交作业"}
                   </Button>
                 </div>
               </CardContent>
@@ -226,20 +230,19 @@ export default function AssignmentPage() {
                   <AlertCircle className="h-6 w-6 text-amber-600 mt-1" />
                   <div className="flex-1">
                     <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">
-                      Submission Deadline Passed
+                      提交截止时间已过
                     </h3>
                     <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
-                      The submission period for this assignment has ended. Normal submissions are
-                      no longer accepted.
+                      本作业的提交期已结束，不再接受正常提交。
                       {mockAssignment.allowResubmission &&
-                        " If you have been asked to resubmit, use the resubmission channel."}
+                        " 如果你被要求重新提交，请使用重新提交通道。"}
                     </p>
                     {canShowResubmissionButton && (
                       <Button
                         onClick={() => router.push(`/assignment/${params.id}/resubmit`)}
                         variant="outline"
                       >
-                        Submit Resubmission
+                        提交重新提交
                       </Button>
                     )}
                   </div>
@@ -252,8 +255,8 @@ export default function AssignmentPage() {
           {hasSubmitted && submission.status === "COMPLETED" && (
             <Card>
               <CardHeader>
-                <CardTitle>Grading Results</CardTitle>
-                <CardDescription>Feedback from your assigned TAs</CardDescription>
+                <CardTitle>批改结果</CardTitle>
+                <CardDescription>分配给你的助教的反馈</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -262,18 +265,17 @@ export default function AssignmentPage() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        <span className="font-medium">TA 01</span>
+                        <span className="font-medium">助教01</span>
                       </div>
                       <Badge variant="outline" className="text-green-600 border-green-600">
-                        Score: 85
+                        分数：85
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
-                      The solution to Question 1 is correct. Please revise Questions 2 and 3 for
-                      better clarity.
+                      第 1 题解答正确。第 2、3 题请修改，使表达更清晰。
                     </p>
                     <Button variant="outline" size="sm">
-                      View Feedback Files
+                      查看反馈文件
                     </Button>
                   </div>
 
@@ -282,14 +284,14 @@ export default function AssignmentPage() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        <span className="font-medium">TA 03</span>
+                        <span className="font-medium">助教03</span>
                       </div>
                       <Badge variant="outline" className="text-green-600 border-green-600">
-                        Score: 90
+                        分数：90
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Good work overall. Clear explanations and well-structured answers.
+                      整体表现不错。解释清晰，答案结构合理。
                     </p>
                   </div>
                 </div>

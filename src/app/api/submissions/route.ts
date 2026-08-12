@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Error creating submission:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create submission" },
+      { error: error.message || "创建提交失败" },
       { status: 400 }
     );
   }
@@ -43,13 +43,13 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: "Please provide studentId or assignmentId filter" },
+      { error: "请提供 studentId 或 assignmentId 筛选条件" },
       { status: 400 }
     );
   } catch (error) {
     console.error("Error fetching submissions:", error);
     return NextResponse.json(
-      { error: "Failed to fetch submissions" },
+      { error: "获取提交列表失败" },
       { status: 500 }
     );
   }

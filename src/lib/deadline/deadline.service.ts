@@ -16,7 +16,7 @@ export interface DeadlineStatus {
   canResubmit: boolean;
 }
 
-export interface DeadlineService {
+export interface IDeadlineService {
   checkDeadline(assignmentId: string): Promise<DeadlineStatus>;
   checkMultipleDeadlines(assignmentIds: string[]): Promise<Map<string, DeadlineStatus>>;
   getTimeRemaining(deadline: Date): number | null;
@@ -26,7 +26,7 @@ export interface DeadlineService {
   validateResubmission(assignmentId: string): Promise<{ allowed: boolean; reason?: string }>;
 }
 
-class DeadlineService implements DeadlineService {
+class DeadlineService implements IDeadlineService {
   /**
    * Check the deadline status for an assignment
    */
@@ -34,7 +34,7 @@ class DeadlineService implements DeadlineService {
     const assignment = await assignmentRepository.findById(assignmentId);
 
     if (!assignment) {
-      throw new Error("Assignment not found");
+      throw new Error("未找到作业");
     }
 
     const now = new Date();
@@ -91,15 +91,15 @@ class DeadlineService implements DeadlineService {
     const days = Math.floor(hours / 24);
 
     if (days > 0) {
-      return `${days} day${days !== 1 ? "s" : ""}`;
+      return `${days} 天`;
     }
     if (hours > 0) {
-      return `${hours} hour${hours !== 1 ? "s" : ""}`;
+      return `${hours} 小时`;
     }
     if (minutes > 0) {
-      return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+      return `${minutes} 分钟`;
     }
-    return `${seconds} second${seconds !== 1 ? "s" : ""}`;
+    return `${seconds} 秒`;
   }
 
   /**
@@ -121,7 +121,7 @@ class DeadlineService implements DeadlineService {
     if (!status.isOpen) {
       return {
         allowed: false,
-        reason: "The assignment submission period has ended",
+        reason: "本作业的提交期已结束",
       };
     }
 
@@ -139,14 +139,14 @@ class DeadlineService implements DeadlineService {
     if (!assignment) {
       return {
         allowed: false,
-        reason: "Assignment not found",
+        reason: "未找到作业",
       };
     }
 
     if (!assignment.allowResubmission) {
       return {
         allowed: false,
-        reason: "Resubmissions are not allowed for this assignment",
+        reason: "本作业不允许重新提交",
       };
     }
 
@@ -223,7 +223,7 @@ export async function requireOpenAssignment(assignmentId: string): Promise<{
   if (!assignment) {
     return {
       success: false,
-      error: "Assignment not found",
+      error: "未找到作业",
     };
   }
 
@@ -232,7 +232,7 @@ export async function requireOpenAssignment(assignmentId: string): Promise<{
   if (!validation.allowed) {
     return {
       success: false,
-      error: validation.error,
+      error: validation.reason || "校验失败",
     };
   }
 

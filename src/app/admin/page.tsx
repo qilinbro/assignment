@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// Mock data - in a real app, this would come from API
+// 模拟数据 - 实际应用中应来自 API
 const mockAssignments = [
   {
     id: "assignment-week-1",
-    title: "Week 1 Homework",
+    title: "第一周作业",
     deadline: "2026-08-20T23:59:59",
     totalSubmissions: 86,
     completedGrading: 62,
@@ -21,7 +21,7 @@ const mockAssignments = [
   },
   {
     id: "assignment-week-2",
-    title: "Week 2 Homework",
+    title: "第二周作业",
     deadline: "2026-09-01T23:59:59",
     totalSubmissions: 93,
     completedGrading: 38,
@@ -31,7 +31,7 @@ const mockAssignments = [
   },
   {
     id: "assignment-week-3",
-    title: "Week 3 Homework",
+    title: "第三周作业",
     deadline: "2026-08-15T23:59:59",
     totalSubmissions: 45,
     completedGrading: 12,
@@ -59,13 +59,13 @@ export default function AdminDashboard() {
     const passed = isDeadlinePassed(deadline);
     return (
       <span className={passed ? "text-destructive" : ""}>
-        {date.toLocaleDateString("en-US", {
+        {date.toLocaleDateString("zh-CN", {
           month: "short",
           day: "numeric",
           hour: "2-digit",
           minute: "2-digit",
         })}
-        {passed && " (Past)"}
+        {passed && "（已截止）"}
       </span>
     );
   };
@@ -77,18 +77,18 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Manage assignments and view statistics</p>
+              <h1 className="text-2xl font-bold">管理员控制台</h1>
+              <p className="text-sm text-muted-foreground">管理作业并查看统计数据</p>
             </div>
             <div className="flex gap-3">
               <Link href="/admin/assignments/create">
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Assignment
+                  创建作业
                 </Button>
               </Link>
-              <Link href="/">
-                <Button variant="outline">Back to Home</Button>
+              <Link href="/login">
+                <Button variant="outline">退出登录</Button>
               </Link>
             </div>
           </div>
@@ -100,65 +100,65 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Total Assignments</CardDescription>
+              <CardDescription>作业总数</CardDescription>
               <CardTitle className="text-3xl">{mockStats.totalAssignments}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4 mr-1" />
-                Active assignments
+                进行中的作业
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Total Submissions</CardDescription>
+              <CardDescription>提交总数</CardDescription>
               <CardTitle className="text-3xl">{mockStats.totalSubmissions}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Users className="h-4 w-4 mr-1" />
-                Student submissions
+                学生提交数
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Pending Grading</CardDescription>
+              <CardDescription>待批改</CardDescription>
               <CardTitle className="text-3xl">{mockStats.pendingGrading}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1" />
-                Awaiting TA review
+                等待助教批阅
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Completed Grading</CardDescription>
+              <CardDescription>已完成批改</CardDescription>
               <CardTitle className="text-3xl">{mockStats.completedGrading}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <CheckCircle className="h-4 w-4 mr-1" />
-                Finished grading
+                已完成批改
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Pending Resubmissions</CardDescription>
+              <CardDescription>待处理重新提交</CardDescription>
               <CardTitle className="text-3xl">{mockStats.pendingResubmissions}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-sm text-muted-foreground">
                 <AlertCircle className="h-4 w-4 mr-1" />
-                Need attention
+                需要关注
               </div>
             </CardContent>
           </Card>
@@ -169,10 +169,10 @@ export default function AdminDashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Assignments</CardTitle>
-                <CardDescription>Manage and monitor all assignments</CardDescription>
+                <CardTitle>作业列表</CardTitle>
+                <CardDescription>管理并监控所有作业</CardDescription>
               </div>
-              <Badge variant="secondary">{mockAssignments.length} assignments</Badge>
+              <Badge variant="secondary">{mockAssignments.length} 个作业</Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -180,12 +180,12 @@ export default function AdminDashboard() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-4 font-medium">Assignment</th>
-                    <th className="text-left p-4 font-medium">Deadline</th>
-                    <th className="text-center p-4 font-medium">Submissions</th>
-                    <th className="text-center p-4 font-medium">Grading Progress</th>
-                    <th className="text-center p-4 font-medium">Status</th>
-                    <th className="text-right p-4 font-medium">Actions</th>
+                    <th className="text-left p-4 font-medium">作业</th>
+                    <th className="text-left p-4 font-medium">截止时间</th>
+                    <th className="text-center p-4 font-medium">提交数</th>
+                    <th className="text-center p-4 font-medium">批改进度</th>
+                    <th className="text-center p-4 font-medium">状态</th>
+                    <th className="text-right p-4 font-medium">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
                         <div className="flex flex-col items-center gap-1">
                           <span className="font-medium">{assignment.totalSubmissions}</span>
                           <span className="text-xs text-muted-foreground">
-                            {assignment.resubmissions} resubmissions
+                            {assignment.resubmissions} 次重新提交
                           </span>
                         </div>
                       </td>
@@ -222,9 +222,9 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-4 text-center">
                         {isDeadlinePassed(assignment.deadline) ? (
-                          <Badge variant="destructive">Closed</Badge>
+                          <Badge variant="destructive">已截止</Badge>
                         ) : (
-                          <Badge variant="default">Open</Badge>
+                          <Badge variant="default">进行中</Badge>
                         )}
                       </td>
                       <td className="p-4">
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
                           <Link href={`/admin/assignments/${assignment.id}`}>
                             <Button variant="outline" size="sm">
                               <BarChart3 className="h-4 w-4 mr-1" />
-                              View Details
+                              查看详情
                             </Button>
                           </Link>
                         </div>
@@ -249,25 +249,25 @@ export default function AdminDashboard() {
         <div className="mt-8 grid md:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest submissions and grading updates</CardDescription>
+              <CardTitle>最近动态</CardTitle>
+              <CardDescription>最新的提交与批改更新</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span>Student A submitted Week 1 Homework</span>
-                  <span className="text-muted-foreground ml-auto">2m ago</span>
+                  <span>学生A 提交了 第一周作业</span>
+                  <span className="text-muted-foreground ml-auto">2 分钟前</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span>TA 01 completed grading for Student B</span>
-                  <span className="text-muted-foreground ml-auto">15m ago</span>
+                  <span>助教01 完成了 学生B 的批改</span>
+                  <span className="text-muted-foreground ml-auto">15 分钟前</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <div className="w-2 h-2 rounded-full bg-amber-500" />
-                  <span>Student C requested resubmission</span>
-                  <span className="text-muted-foreground ml-auto">1h ago</span>
+                  <span>学生C 申请了重新提交</span>
+                  <span className="text-muted-foreground ml-auto">1 小时前</span>
                 </div>
               </div>
             </CardContent>
@@ -275,13 +275,13 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>TA Performance</CardTitle>
-              <CardDescription>Grading completion by TA</CardDescription>
+              <CardTitle>助教绩效</CardTitle>
+              <CardDescription>各助教的批改完成情况</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span>TA 01</span>
+                  <span>助教01</span>
                   <div className="flex items-center gap-2">
                     <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
                       <div className="h-full bg-green-500" style={{ width: "85%" }} />
@@ -290,7 +290,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span>TA 02</span>
+                  <span>助教02</span>
                   <div className="flex items-center gap-2">
                     <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
                       <div className="h-full bg-green-500" style={{ width: "72%" }} />
@@ -299,7 +299,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span>TA 03</span>
+                  <span>助教03</span>
                   <div className="flex items-center gap-2">
                     <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
                       <div className="h-full bg-amber-500" style={{ width: "45%" }} />
@@ -313,22 +313,22 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>System Status</CardTitle>
-              <CardDescription>Overall system health</CardDescription>
+              <CardTitle>系统状态</CardTitle>
+              <CardDescription>整体系统健康状况</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span>Active TAs</span>
-                  <Badge variant="secondary">5 online</Badge>
+                  <span>在线助教</span>
+                  <Badge variant="secondary">5 人在线</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span>Active Students</span>
-                  <Badge variant="secondary">12 active</Badge>
+                  <span>活跃学生</span>
+                  <Badge variant="secondary">12 人活跃</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span>System Load</span>
-                  <Badge variant="default">Normal</Badge>
+                  <span>系统负载</span>
+                  <Badge variant="default">正常</Badge>
                 </div>
               </div>
             </CardContent>

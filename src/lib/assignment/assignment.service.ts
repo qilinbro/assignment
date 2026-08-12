@@ -31,21 +31,21 @@ class AssignmentService implements IAssignmentService {
     // Validate TA count
     if (data.taCount > data.taIds.length) {
       throw new Error(
-        `TA count (${data.taCount}) cannot exceed the number of available TAs (${data.taIds.length})`
+        `助教数量（${data.taCount}）不能超过可用助教的数量（${data.taIds.length}）`
       );
     }
 
     if (data.taCount <= 0) {
-      throw new Error("TA count must be greater than 0");
+      throw new Error("助教数量必须大于 0");
     }
 
     if (data.taIds.length === 0) {
-      throw new Error("At least one TA must be selected");
+      throw new Error("必须至少选择一名助教");
     }
 
     // Validate deadline
     if (data.deadline <= new Date()) {
-      throw new Error("Deadline must be in the future");
+      throw new Error("截止时间必须是未来时间");
     }
 
     return await assignmentRepository.create(data);
@@ -57,7 +57,7 @@ class AssignmentService implements IAssignmentService {
   ): Promise<Assignment | null> {
     const existingAssignment = await assignmentRepository.findById(id);
     if (!existingAssignment) {
-      throw new Error("Assignment not found");
+      throw new Error("未找到作业");
     }
 
     // If updating TA count or TA IDs, validate the relationship
@@ -67,14 +67,14 @@ class AssignmentService implements IAssignmentService {
 
       if (taCount > taIds.length) {
         throw new Error(
-          `TA count (${taCount}) cannot exceed the number of available TAs (${taIds.length})`
+          `助教数量（${taCount}）不能超过可用助教的数量（${taIds.length}）`
         );
       }
     }
 
     // Validate deadline if being updated
     if (data.deadline && data.deadline <= new Date()) {
-      throw new Error("Deadline must be in the future");
+      throw new Error("截止时间必须是未来时间");
     }
 
     return await assignmentRepository.update(id, data);
@@ -97,7 +97,7 @@ class AssignmentService implements IAssignmentService {
     const submissions = await submissionRepository.findByAssignmentId(id);
     if (submissions.length > 0) {
       throw new Error(
-        "Cannot delete assignment with existing submissions. Consider archiving instead."
+        "无法删除已有提交的作业，建议改为归档。"
       );
     }
 
@@ -186,7 +186,7 @@ class AssignmentService implements IAssignmentService {
   async publishAssignment(assignmentId: string): Promise<Assignment | null> {
     const assignment = await assignmentRepository.findById(assignmentId);
     if (!assignment) {
-      throw new Error("Assignment not found");
+      throw new Error("未找到作业");
     }
 
     // In this implementation, we could add a "published" flag

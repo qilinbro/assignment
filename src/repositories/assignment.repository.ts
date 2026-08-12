@@ -26,35 +26,35 @@ class MockAssignmentRepository implements IAssignmentRepository {
     // Create some mock assignments
     const week1Assignment: Assignment = {
       id: "assignment-week-1",
-      title: "Week 1 Homework",
-      description: "Complete the exercises from Chapter 1",
+      title: "第一周作业",
+      description: "完成第一章的练习题",
       deadline: new Date("2026-08-20T23:59:59"),
       taIds: ["ta-1", "ta-2", "ta-3", "ta-4", "ta-5"],
       taCount: 2,
       allowResubmission: true,
       resubmissionDescription:
-        "Please explain what you revised based on the feedback",
+        "请说明你根据反馈做了哪些修改",
       createdBy: "admin-1",
       createdAt: new Date("2024-08-01"),
     };
 
     const week2Assignment: Assignment = {
       id: "assignment-week-2",
-      title: "Week 2 Homework",
-      description: "Essay writing assignment",
+      title: "第二周作业",
+      description: "作文写作练习",
       deadline: new Date("2026-09-01T23:59:59"),
       taIds: ["ta-1", "ta-2", "ta-3", "ta-4"],
       taCount: 2,
       allowResubmission: true,
-      resubmissionDescription: "Please address all TA comments",
+      resubmissionDescription: "请回应所有助教的评语",
       createdBy: "admin-1",
       createdAt: new Date("2024-08-08"),
     };
 
     const week3Assignment: Assignment = {
       id: "assignment-week-3",
-      title: "Week 3 Homework",
-      description: "Reading comprehension and analysis",
+      title: "第三周作业",
+      description: "阅读理解与分析",
       deadline: new Date("2026-08-15T23:59:59"),
       taIds: ["ta-1", "ta-2", "ta-3"],
       taCount: 1,

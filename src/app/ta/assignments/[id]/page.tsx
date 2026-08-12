@@ -12,7 +12,7 @@ import { ImagePreview } from "@/components/submission/image-preview";
 import { FileUpload } from "@/components/submission/file-upload";
 import { Badge } from "@/components/ui/badge";
 import { AIAssistant } from "@/components/ta/ai-assistant";
-import type { AIAnalysisResult } from "@/types";
+import type { AIAnalysisResult, SubmissionStatus } from "@/types";
 import {
   Select,
   SelectContent,
@@ -22,24 +22,31 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 
-// Mock data
+// 模拟数据
 const mockSubmission = {
   id: "submission-3",
   assignmentId: "assignment-week-1",
-  assignmentTitle: "Week 1 Homework",
+  assignmentTitle: "第一周作业",
   studentId: "student-3",
-  studentName: "Student C",
+  studentName: "学生C",
   submittedAt: "2024-08-12T15:00:00",
   files: [
     {
-      id: "file-3",
-      url: "/uploads/submission-3-1.png",
-      fileName: "exercise.png",
+      id: "file-3-1",
+      url: "/uploads/student-3-app.png",
+      fileName: "应用文.png",
       fileType: "image/png",
-      size: 1536000,
+      size: 1309927,
+    },
+    {
+      id: "file-3-2",
+      url: "/uploads/student-3-read.png",
+      fileName: "读后续.png",
+      fileType: "image/png",
+      size: 1355548,
     },
   ],
-  status: "GRADING",
+  status: "GRADING" as SubmissionStatus,
 };
 
 const mockAssignmentId = "sa-5";
@@ -61,13 +68,13 @@ export default function TAGradingPage() {
 
   const handleSubmit = async () => {
     if (!score && !comment.trim()) {
-      alert("Please provide either a score or a comment");
+      alert("请填写分数或评语");
       return;
     }
 
     setIsSubmitting(true);
 
-    // Simulate API call
+    // 模拟 API 调用
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     console.log("Submitting grading:", {
@@ -78,17 +85,17 @@ export default function TAGradingPage() {
       feedbackFiles: feedbackFiles.length,
     });
 
-    // In a real app, we would:
-    // 1. Upload feedback files
-    // 2. Submit grading via API
-    // 3. Redirect back to dashboard
+    // 实际应用中会：
+    // 1. 上传反馈文件
+    // 2. 通过 API 提交批改
+    // 3. 跳回控制台
 
     setIsSubmitting(false);
     router.push("/ta");
   };
 
   const handleDownload = async () => {
-    // Simulate download
+    // 模拟下载
     console.log("Downloading submission files");
   };
 
@@ -107,17 +114,17 @@ export default function TAGradingPage() {
             </Button>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-xl font-bold">Grade Submission</h1>
+                <h1 className="text-xl font-bold">批改提交</h1>
                 <Badge variant="outline">{mockSubmission.assignmentTitle}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                {mockSubmission.studentName} • Submitted{" "}
-                {format(new Date(mockSubmission.submittedAt), "MMM dd, yyyy 'at' HH:mm")}
+                {mockSubmission.studentName} • 提交于{" "}
+                {format(new Date(mockSubmission.submittedAt), "yyyy年MM月dd日 HH:mm")}
               </p>
             </div>
             <Button variant="outline" onClick={handleDownload}>
               <Download className="h-4 w-4 mr-2" />
-              Download Files
+              下载文件
             </Button>
           </div>
         </div>
@@ -129,9 +136,9 @@ export default function TAGradingPage() {
           <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Student Submission</CardTitle>
+                <CardTitle>学生提交</CardTitle>
                 <CardDescription>
-                  Review the student's uploaded work
+                  查看学生上传的作业
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -142,15 +149,15 @@ export default function TAGradingPage() {
             <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">
               <CardHeader>
                 <CardTitle className="text-blue-900 dark:text-blue-100 text-base">
-                  Grading Guidelines
+                  批改指南
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-blue-900 dark:text-blue-100">
                 <ul className="space-y-2">
-                  <li>• Review all uploaded files carefully</li>
-                  <li>• Provide specific, constructive feedback</li>
-                  <li>• Score fairly based on assignment criteria</li>
-                  <li>• Only require resubmission if necessary</li>
+                  <li>• 仔细审阅所有上传的文件</li>
+                  <li>• 提供具体、建设性的反馈</li>
+                  <li>• 按作业标准公正评分</li>
+                  <li>• 仅在确有必要时才要求重新提交</li>
                 </ul>
               </CardContent>
             </Card>
@@ -160,22 +167,22 @@ export default function TAGradingPage() {
           <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Submit Grading</CardTitle>
+                <CardTitle>提交批改</CardTitle>
                 <CardDescription>
-                  Enter your score, comments, and upload feedback files
+                  填写分数、评语并上传反馈文件
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Score */}
                 <div className="space-y-2">
-                  <Label htmlFor="score">Score (0-100)</Label>
+                  <Label htmlFor="score">分数（0-100）</Label>
                   <div className="flex items-center gap-4">
                     <Input
                       id="score"
                       type="number"
                       min="0"
                       max="100"
-                      placeholder="Enter score"
+                      placeholder="请输入分数"
                       value={score}
                       onChange={(e) => setScore(e.target.value)}
                       className="max-w-32"
@@ -198,22 +205,22 @@ export default function TAGradingPage() {
 
                 {/* Comments */}
                 <div className="space-y-2">
-                  <Label htmlFor="comment">Grading Comments</Label>
+                  <Label htmlFor="comment">批改评语</Label>
                   <Textarea
                     id="comment"
-                    placeholder="Enter your feedback for the student..."
+                    placeholder="请输入给学生的反馈..."
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     rows={6}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Provide specific feedback on what was done well and what needs improvement
+                    具体说明哪些地方做得好、哪些地方需要改进
                   </p>
                 </div>
 
                 {/* Require Resubmission */}
                 <div className="space-y-2">
-                  <Label>Require Resubmission?</Label>
+                  <Label>是否要求重新提交？</Label>
                   <Select
                     value={requireResubmission ? "yes" : "no"}
                     onValueChange={(value) => setRequireResubmission(value === "yes")}
@@ -222,20 +229,20 @@ export default function TAGradingPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="no">No, the work is satisfactory</SelectItem>
-                      <SelectItem value="yes">Yes, requires revision</SelectItem>
+                      <SelectItem value="no">否，作业合格</SelectItem>
+                      <SelectItem value="yes">是，需要修改</SelectItem>
                     </SelectContent>
                   </Select>
                   {requireResubmission && (
                     <p className="text-xs text-amber-600 dark:text-amber-400">
-                      The student will need to submit a revised version
+                      学生需要提交修改后的版本
                     </p>
                   )}
                 </div>
 
                 {/* Feedback Files Upload */}
                 <div className="space-y-2">
-                  <Label>Upload Feedback Files (Optional)</Label>
+                  <Label>上传反馈文件（可选）</Label>
                   <FileUpload
                     onFilesChange={setFeedbackFiles}
                     maxFiles={5}
@@ -243,7 +250,7 @@ export default function TAGradingPage() {
                     maxSizeMB={10}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Upload annotated images, PDFs, or other feedback documents
+                    上传带批注的图片、PDF 或其他反馈文档
                   </p>
                 </div>
 
@@ -254,7 +261,7 @@ export default function TAGradingPage() {
                     onClick={() => router.push("/ta")}
                     className="flex-1"
                   >
-                    Cancel
+                    取消
                   </Button>
                   <Button
                     onClick={handleSubmit}
@@ -262,7 +269,7 @@ export default function TAGradingPage() {
                     className="flex-1"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isSubmitting ? "Submitting..." : "Submit Grading"}
+                    {isSubmitting ? "提交中..." : "提交批改"}
                   </Button>
                 </div>
               </CardContent>
@@ -271,7 +278,7 @@ export default function TAGradingPage() {
             {/* Quick Score Buttons */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Quick Score</CardTitle>
+                <CardTitle className="text-base">快速评分</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-5 gap-2">

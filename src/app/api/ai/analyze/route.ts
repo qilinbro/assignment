@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Error analyzing submission:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to analyze submission" },
+      { error: error.message || "分析提交失败" },
       { status: 500 }
     );
   }
