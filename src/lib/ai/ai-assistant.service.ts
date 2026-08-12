@@ -10,12 +10,11 @@ import type {
   AIGradingAssistant,
 } from "@/types/ai-assistant";
 import { prisma } from "@/lib/db";
+import { fetchCompressedImageAsBase64 } from "@/lib/ai/compress-image";
 
 const GLM_BASE_URL = process.env.GLM_BASE_URL || "https://open.bigmodel.cn/api/paas/v4";
 const GLM_API_KEY = process.env.GLM_API_KEY || "";
 const GLM_MODEL = process.env.GLM_MODEL || "glm-4v";
-// 单张图片 base64 上限（约 4MB，超出易触发 GLM 400）
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 /** 调用 GLM Chat Completions API */
 async function callGLM(messages: any[], temperature = 0.7): Promise<string> {
@@ -52,27 +51,6 @@ async function callGLM(messages: any[], temperature = 0.7): Promise<string> {
   return data.choices?.[0]?.message?.content || "";
 }
 
-/** 获取图片并转为 base64 data URL；过大或失败返回 null */
-async function fetchImageAsBase64(url: string): Promise<string | null> {
-  try {
-    const fullUrl = url.startsWith("http") ? url : `http://localhost:3000${url}`;
-    const res = await fetch(fullUrl);
-    if (!res.ok) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
-    // 原始字节过大则跳过，避免请求体超限触发 400
-    if (buf.length > MAX_IMAGE_BYTES) return null;
-    const base64 = buf.toString("base64");
-    const ext = url.split(".").pop()?.toLowerCase();
-    const mime =
-      ext === "jpg" || ext === "jpeg" ? "image/jpeg" :
-      ext === "webp" ? "image/webp" :
-      ext === "gif" ? "image/gif" : "image/png";
-    return `data:${mime};base64,${base64}`;
-  } catch {
-    return null;
-  }
-}
-
 /** 从文本中提取 JSON */
 function extractJSON(text: string): any {
   try { return JSON.parse(text); } catch {}
@@ -97,14 +75,14 @@ class GLMAIAssistantService implements AIGradingAssistant {
       throw new Error("找不到提交的作业文件");
     }
 
-    // 只取第一张可用图片（多张大图 base64 会让请求体超限触发 GLM 400）
+    // 只取第一张可用图片，压缩后发给 GLM（避免多张大图 base64 超限触发 400）
     let imageDataUrl: string | null = null;
     for (const file of submission.files) {
-      imageDataUrl = await fetchImageAsBase64(file.url);
+      imageDataUrl = await fetchCompressedImageAsBase64(file.url);
       if (imageDataUrl) break;
     }
     if (!imageDataUrl) {
-      throw new Error("作业图片过大或无法加载，AI 暂时无法分析，请手动批改");
+      throw new Error("作业图片无法加载，AI 暂时无法分析，请手动批改");
     }
 
     // 构建分析 prompt（单图）
