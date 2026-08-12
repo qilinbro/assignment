@@ -7,6 +7,7 @@ export * from "./feedback";
 export * from "./resubmission";
 export * from "./storage";
 export * from "./deadline";
+export * from "./ai";
 
 // Repositories
 export * from "../repositories";

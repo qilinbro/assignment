@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ImagePreview } from "@/components/submission/image-preview";
 import { FileUpload } from "@/components/submission/file-upload";
 import { Badge } from "@/components/ui/badge";
+import { AIAssistant } from "@/components/ta/ai-assistant";
+import type { AIAnalysisResult } from "@/types";
 import {
   Select,
   SelectContent,
@@ -50,6 +52,12 @@ export default function TAGradingPage() {
   const [comment, setComment] = React.useState("");
   const [requireResubmission, setRequireResubmission] = React.useState(false);
   const [feedbackFiles, setFeedbackFiles] = React.useState<File[]>([]);
+
+  const handleApplyAIAnalysis = (analysis: AIAnalysisResult) => {
+    setScore(analysis.suggestedScore.toString());
+    setComment(analysis.suggestedComments);
+    setRequireResubmission(analysis.requiresResubmission);
+  };
 
   const handleSubmit = async () => {
     if (!score && !comment.trim()) {
@@ -115,10 +123,10 @@ export default function TAGradingPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="grid lg:grid-cols-2 gap-6">
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Student Submission */}
-          <div className="space-y-6">
+          <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Student Submission</CardTitle>
@@ -148,8 +156,8 @@ export default function TAGradingPage() {
             </Card>
           </div>
 
-          {/* Right Column - Grading Form */}
-          <div className="space-y-6">
+          {/* Middle Column - Grading Form */}
+          <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Submit Grading</CardTitle>
@@ -281,6 +289,16 @@ export default function TAGradingPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Right Column - AI Assistant */}
+          <div className="lg:col-span-1">
+            <AIAssistant
+              submissionId={mockSubmission.id}
+              assignmentTitle={mockSubmission.assignmentTitle}
+              studentFiles={mockSubmission.files}
+              onApplyAnalysis={handleApplyAIAnalysis}
+            />
           </div>
         </div>
       </main>
