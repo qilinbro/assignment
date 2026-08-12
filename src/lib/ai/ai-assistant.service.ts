@@ -13,7 +13,9 @@ import { prisma } from "@/lib/db";
 
 const GLM_BASE_URL = process.env.GLM_BASE_URL || "https://open.bigmodel.cn/api/paas/v4";
 const GLM_API_KEY = process.env.GLM_API_KEY || "";
-const GLM_MODEL = process.env.GLM_MODEL || "glm-4v-plus";
+const GLM_MODEL = process.env.GLM_MODEL || "glm-4v";
+// 单张图片 base64 上限（约 4MB，超出易触发 GLM 400）
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 /** 调用 GLM Chat Completions API */
 async function callGLM(messages: any[], temperature = 0.7): Promise<string> {
@@ -27,27 +29,38 @@ async function callGLM(messages: any[], temperature = 0.7): Promise<string> {
       model: GLM_MODEL,
       messages,
       temperature,
-      max_tokens: 2000,
     }),
   });
 
   if (!response.ok) {
-    const err = await response.text();
-    console.error("GLM API error:", response.status, err);
-    throw new Error(`AI 服务暂时不可用（${response.status}）`);
+    const errText = await response.text();
+    console.error("GLM API error:", response.status, errText);
+    // 尝试解析 GLM 返回的结构化错误信息
+    let detail = "";
+    try {
+      const errJson = JSON.parse(errText);
+      detail = errJson?.error?.message || errJson?.msg || "";
+    } catch {}
+    throw new Error(
+      detail
+        ? `AI 服务暂时不可用（${response.status}）：${detail}`
+        : `AI 服务暂时不可用（${response.status}）`
+    );
   }
 
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
 }
 
-/** 获取图片并转为 base64 data URL */
+/** 获取图片并转为 base64 data URL；过大或失败返回 null */
 async function fetchImageAsBase64(url: string): Promise<string | null> {
   try {
     const fullUrl = url.startsWith("http") ? url : `http://localhost:3000${url}`;
     const res = await fetch(fullUrl);
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
+    // 原始字节过大则跳过，避免请求体超限触发 400
+    if (buf.length > MAX_IMAGE_BYTES) return null;
     const base64 = buf.toString("base64");
     const ext = url.split(".").pop()?.toLowerCase();
     const mime =
@@ -84,15 +97,17 @@ class GLMAIAssistantService implements AIGradingAssistant {
       throw new Error("找不到提交的作业文件");
     }
 
-    // 图片转 base64（最多 5 张）
-    const images: string[] = [];
-    for (const file of submission.files.slice(0, 5)) {
-      const b64 = await fetchImageAsBase64(file.url);
-      if (b64) images.push(b64);
+    // 只取第一张可用图片（多张大图 base64 会让请求体超限触发 GLM 400）
+    let imageDataUrl: string | null = null;
+    for (const file of submission.files) {
+      imageDataUrl = await fetchImageAsBase64(file.url);
+      if (imageDataUrl) break;
     }
-    if (images.length === 0) throw new Error("无法加载作业图片");
+    if (!imageDataUrl) {
+      throw new Error("作业图片过大或无法加载，AI 暂时无法分析，请手动批改");
+    }
 
-    // 构建分析 prompt
+    // 构建分析 prompt（单图）
     const content: any[] = [
       {
         type: "text",
@@ -108,10 +123,8 @@ class GLMAIAssistantService implements AIGradingAssistant {
   "requiresResubmission": false
 }`,
       },
+      { type: "image_url", image_url: { url: imageDataUrl } },
     ];
-    for (const img of images) {
-      content.push({ type: "image_url", image_url: { url: img } });
-    }
 
     const raw = await callGLM([{ role: "user", content }], 0.7);
     const parsed = extractJSON(raw);
