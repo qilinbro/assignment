@@ -1,0 +1,124 @@
+// Prisma schema —— 作业提交与批改系统
+// 部署：npx prisma db push（DATABASE_URL 指向服务器 postgres）
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String   @unique // 登录账号
+  email     String?
+  password  String // bcrypt 哈希
+  role      String // ADMIN | TA | STUDENT
+  mustChangePassword Boolean @default(false) // 首次登录强制改密
+  createdAt DateTime @default(now())
+
+  createdAssignments Assignment[]            @relation("AssignmentCreator")
+  submissions        Submission[]
+  taAssignments      SubmissionAssignment[]
+  resubmissions      Resubmission[]
+}
+
+model Assignment {
+  id                      String   @id @default(cuid())
+  title                   String
+  description             String?
+  deadline                DateTime
+  taIds                   String[] // 参与的助教 id（反规范化）
+  taCount                 Int
+  allowResubmission       Boolean  @default(false)
+  resubmissionDescription String?
+  createdById             String
+  createdBy               User     @relation("AssignmentCreator", fields: [createdById], references: [id])
+  createdAt               DateTime @default(now())
+
+  submissions Submission[]
+}
+
+model Submission {
+  id           String   @id @default(cuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  studentId    String
+  student      User     @relation(fields: [studentId], references: [id])
+  status       String // PENDING | GRADING | COMPLETED | RESUBMISSION_REQUIRED | RESUBMITTED
+  submittedAt  DateTime
+  createdAt    DateTime @default(now())
+
+  files         SubmissionFile[]
+  assignments   SubmissionAssignment[]
+  resubmissions Resubmission[]
+}
+
+model SubmissionFile {
+  id           String @id @default(cuid())
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  url          String
+  fileName     String
+  fileType     String
+  size         Int
+}
+
+model SubmissionAssignment {
+  id           String    @id @default(cuid())
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  taId         String
+  ta           User      @relation(fields: [taId], references: [id])
+  status       String // PENDING | GRADING | COMPLETED | RESUBMISSION_REQUIRED
+  assignedAt   DateTime
+  completedAt  DateTime?
+
+  feedback Feedback[]
+}
+
+model Feedback {
+  id                     String   @id @default(cuid())
+  submissionAssignmentId String
+  submissionAssignment   SubmissionAssignment @relation(fields: [submissionAssignmentId], references: [id], onDelete: Cascade)
+  score                  Int?
+  comment                String?
+  requireResubmission    Boolean  @default(false)
+  createdAt              DateTime @default(now())
+
+  files FeedbackFile[]
+}
+
+model FeedbackFile {
+  id         String @id @default(cuid())
+  feedbackId String
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  url        String
+  fileName   String
+  fileType   String
+  size       Int
+}
+
+model Resubmission {
+  id           String   @id @default(cuid())
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User     @relation(fields: [studentId], references: [id])
+  reason       String
+  createdAt    DateTime @default(now())
+
+  files ResubmissionFile[]
+}
+
+model ResubmissionFile {
+  id             String @id @default(cuid())
+  resubmissionId String
+  resubmission   Resubmission @relation(fields: [resubmissionId], references: [id], onDelete: Cascade)
+  url            String
+  fileName       String
+  fileType       String
+  size           Int
+}
