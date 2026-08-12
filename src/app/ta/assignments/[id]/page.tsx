@@ -21,42 +21,26 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 
-// 模拟数据
-const mockSubmission = {
-  id: "submission-3",
-  assignmentId: "assignment-2024-08-01",
-  assignmentTitle: "8月1日作业",
-  studentId: "student-3",
-  studentName: "学生C",
-  submittedAt: "2024-08-12T15:00:00",
-  files: [
-    {
-      id: "file-3-1",
-      url: "/uploads/student-3-app.png",
-      fileName: "应用文.png",
-      fileType: "image/png",
-      size: 1309927,
-    },
-    {
-      id: "file-3-2",
-      url: "/uploads/student-3-read.png",
-      fileName: "读后续.png",
-      fileType: "image/png",
-      size: 1355548,
-    },
-  ],
-  status: "GRADING" as SubmissionStatus,
-};
-
-const mockAssignmentId = "sa-5";
-
 export default function TAGradingPage() {
   const params = useParams();
   const router = useRouter();
+  const [loading, setLoading] = React.useState(true);
+  const [submission, setSubmission] = React.useState<any>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [comment, setComment] = React.useState("");
   const [requireResubmission, setRequireResubmission] = React.useState(false);
   const [feedbackFiles, setFeedbackFiles] = React.useState<File[]>([]);
+
+  React.useEffect(() => {
+    // TODO: Fetch submission data from API
+    // const fetchData = async () => {
+    //   const response = await fetch(`/api/submissions/${params.id}`);
+    //   const data = await response.json();
+    //   setSubmission(data);
+    //   setLoading(false);
+    // };
+    setLoading(false);
+  }, [params.id]);
 
   const handleApplyAIAnalysis = (analysis: AIAnalysisResult) => {
     setComment(analysis.suggestedComments);
@@ -71,9 +55,7 @@ export default function TAGradingPage() {
 
     setIsSubmitting(true);
 
-    // 模拟 API 调用
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
+    // TODO: Upload feedback files and submit grading via API
     console.log("Submitting grading:", {
       submissionAssignmentId: params.id,
       comment,
@@ -81,19 +63,36 @@ export default function TAGradingPage() {
       feedbackFiles: feedbackFiles.length,
     });
 
-    // 实际应用中会：
-    // 1. 上传反馈文件
-    // 2. 通过 API 提交批改
-    // 3. 跳回控制台
-
     setIsSubmitting(false);
     router.push("/ta");
   };
 
   const handleDownload = async () => {
-    // 模拟下载
     console.log("Downloading submission files");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <p className="text-muted-foreground">加载中...</p>
+      </div>
+    );
+  }
+
+  if (!submission) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground mb-4">未找到提交记录</p>
+            <Button variant="outline" onClick={() => router.push("/ta")}>
+              返回控制台
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -111,11 +110,11 @@ export default function TAGradingPage() {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-xl font-bold">批改提交</h1>
-                <Badge variant="outline">{mockSubmission.assignmentTitle}</Badge>
+                <Badge variant="outline">{submission.assignmentTitle}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                {mockSubmission.studentName} • 提交于{" "}
-                {format(new Date(mockSubmission.submittedAt), "yyyy年MM月dd日 HH:mm")}
+                {submission.studentName} • 提交于{" "}
+                {format(new Date(submission.submittedAt), "yyyy年MM月dd日 HH:mm")}
               </p>
             </div>
             <Button variant="outline" onClick={handleDownload}>
@@ -127,7 +126,7 @@ export default function TAGradingPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-2 gap-6">
           {/* Left Column - Student Submission */}
           <div className="lg:col-span-1 space-y-6">
             <Card>
@@ -138,7 +137,7 @@ export default function TAGradingPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ImagePreview files={mockSubmission.files} />
+                <ImagePreview files={submission.files || []} />
               </CardContent>
             </Card>
 
@@ -241,17 +240,15 @@ export default function TAGradingPage() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Right Column - AI Assistant */}
-          <div className="lg:col-span-1">
-            <AIAssistant
-              submissionId={mockSubmission.id}
-              assignmentTitle={mockSubmission.assignmentTitle}
-              studentFiles={mockSubmission.files}
-              onApplyAnalysis={handleApplyAIAnalysis}
-            />
-          </div>
         </div>
+
+        {/* AI 助手：可拖动浮动面板，不占布局 */}
+        <AIAssistant
+          submissionId={submission.id}
+          assignmentTitle={submission.assignmentTitle}
+          studentFiles={submission.files || []}
+          onApplyAnalysis={handleApplyAIAnalysis}
+        />
       </main>
     </div>
   );

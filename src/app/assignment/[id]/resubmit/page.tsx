@@ -13,43 +13,73 @@ import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
 import type { SubmissionStatus } from "@/types";
 
-// 模拟数据
-const mockAssignment = {
-  id: "assignment-2024-08-01",
-  title: "8月1日作业",
-  allowResubmission: true,
-  resubmissionDescription: "请说明你根据助教反馈做了哪些修改",
-  deadline: "2026-08-20T23:59:59",
-};
-
-const mockOriginalSubmission = {
-  id: "submission-2",
-  submittedAt: "2024-08-12T14:35:00",
-  status: "RESUBMISSION_REQUIRED" as SubmissionStatus,
-  files: [
-    { id: "file-2-1", url: "/uploads/student-2-app.png", fileName: "应用文.png" },
-    { id: "file-2-2", url: "/uploads/student-2-read.png", fileName: "读后续.png" },
-  ],
-};
-
-const mockFeedback = [
-  {
-    taId: "ta-2",
-    taName: "助教02",
-    score: 78,
-    comment: "部分概念需要澄清。请查看反馈并重新提交。",
-    requireResubmission: true,
-  },
-];
-
 export default function ResubmissionPage() {
   const params = useParams();
   const router = useRouter();
+  const [loading, setLoading] = React.useState(true);
+  const [assignment, setAssignment] = React.useState<any>(null);
+  const [submission, setSubmission] = React.useState<any>(null);
+  const [feedback, setFeedback] = React.useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
   const [resubmissionReason, setResubmissionReason] = React.useState("");
 
-  if (!mockAssignment.allowResubmission) {
+  React.useEffect(() => {
+    // TODO: Fetch data from API
+    setLoading(false);
+  }, [params.id]);
+
+  const handleSubmit = async () => {
+    if (uploadedFiles.length === 0) {
+      alert("请至少上传一个文件");
+      return;
+    }
+
+    if (!resubmissionReason.trim()) {
+      alert("请填写重新提交的原因");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // TODO: Submit resubmission via API
+    console.log("Resubmission data:", {
+      files: uploadedFiles,
+      reason: resubmissionReason,
+    });
+
+    setIsSubmitting(false);
+    router.push(`/assignment/${params.id}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <p className="text-muted-foreground">加载中...</p>
+      </div>
+    );
+  }
+
+  if (!assignment) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h2 className="text-lg font-semibold mb-2">作业不存在</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                无法找到该作业。
+              </p>
+              <Button onClick={() => router.push("/")}>返回首页</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!assignment.allowResubmission) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <Card className="max-w-md">
@@ -68,36 +98,6 @@ export default function ResubmissionPage() {
     );
   }
 
-  const handleSubmit = async () => {
-    if (uploadedFiles.length === 0) {
-      alert("请至少上传一个文件");
-      return;
-    }
-
-    if (!resubmissionReason.trim()) {
-      alert("请填写重新提交的原因");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // 模拟 API 调用
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    console.log("Resubmission data:", {
-      files: uploadedFiles,
-      reason: resubmissionReason,
-    });
-
-    // 实际应用中会：
-    // 1. 上传文件到存储
-    // 2. 通过 API 创建重新提交
-    // 3. 跳转到确认页面
-
-    setIsSubmitting(false);
-    router.push(`/assignment/${params.id}`);
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
@@ -113,8 +113,8 @@ export default function ResubmissionPage() {
             </Button>
             <div>
               <Badge variant="outline" className="mb-2">重新提交</Badge>
-              <h1 className="text-2xl font-bold">{mockAssignment.title}</h1>
-              <p className="text-sm text-muted-foreground">{mockAssignment.id}</p>
+              <h1 className="text-2xl font-bold">{assignment.title}</h1>
+              <p className="text-sm text-muted-foreground">{assignment.id}</p>
             </div>
           </div>
         </div>
@@ -123,53 +123,57 @@ export default function ResubmissionPage() {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="space-y-6">
           {/* Original Submission Info */}
-          <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10">
-            <CardHeader>
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-6 w-6 text-amber-600 mt-1" />
-                <div>
-                  <CardTitle className="text-amber-900 dark:text-amber-100">
-                    需要重新提交
-                  </CardTitle>
-                  <CardDescription className="text-amber-700 dark:text-amber-300">
-                    根据助教反馈，你的原始提交需要修改
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-sm">
-                <p className="text-muted-foreground mb-1">原始提交：</p>
-                <p className="font-medium">
-                  {format(new Date(mockOriginalSubmission.submittedAt), "yyyy年MM月dd日 HH:mm")}
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-sm font-medium">助教反馈：</p>
-                {mockFeedback.map((feedback) => (
-                  <div key={feedback.taId} className="border rounded-lg p-3 bg-background">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-sm">{feedback.taName}</span>
-                      <Badge variant="outline" className="text-sm">
-                        分数：{feedback.score}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{feedback.comment}</p>
+          {submission && (
+            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10">
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-6 w-6 text-amber-600 mt-1" />
+                  <div>
+                    <CardTitle className="text-amber-900 dark:text-amber-100">
+                      需要重新提交
+                    </CardTitle>
+                    <CardDescription className="text-amber-700 dark:text-amber-300">
+                      根据助教反馈，你的原始提交需要修改
+                    </CardDescription>
                   </div>
-                ))}
-              </div>
-
-              {mockAssignment.resubmissionDescription && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                  <p className="text-sm font-medium mb-1">重新提交说明：</p>
-                  <p className="text-sm text-muted-foreground">
-                    {mockAssignment.resubmissionDescription}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm">
+                  <p className="text-muted-foreground mb-1">原始提交：</p>
+                  <p className="font-medium">
+                    {format(new Date(submission.submittedAt), "yyyy年MM月dd日 HH:mm")}
                   </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                {feedback.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">助教反馈：</p>
+                    {feedback.map((fb) => (
+                      <div key={fb.taId} className="border rounded-lg p-3 bg-background">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm">{fb.taName}</span>
+                          <Badge variant="outline" className="text-sm">
+                            分数：{fb.score}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{fb.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {assignment.resubmissionDescription && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                    <p className="text-sm font-medium mb-1">重新提交说明：</p>
+                    <p className="text-sm text-muted-foreground">
+                      {assignment.resubmissionDescription}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Resubmission Form */}
           <Card>

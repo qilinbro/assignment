@@ -8,66 +8,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
-import type { SubmissionStatus } from "@/types";
-
-// 模拟助教数据
-const mockTAId = "ta-1";
-const mockTAName = "助教01";
-
-const mockAssignments = [
-  {
-    id: "sa-5",
-    assignmentTitle: "8月1日作业",
-    assignmentId: "assignment-2024-08-01",
-    studentId: "student-3",
-    studentName: "学生C",
-    submittedAt: "2024-08-12T15:00:00",
-    status: "GRADING" as SubmissionStatus,
-    submissionId: "submission-3",
-  },
-  {
-    id: "sa-1",
-    assignmentTitle: "8月1日作业",
-    assignmentId: "assignment-2024-08-01",
-    studentId: "student-1",
-    studentName: "学生A",
-    submittedAt: "2024-08-12T14:20:00",
-    status: "COMPLETED" as SubmissionStatus,
-    submissionId: "submission-1",
-  },
-  {
-    id: "sa-2",
-    assignmentTitle: "8月1日作业",
-    assignmentId: "assignment-2024-08-01",
-    studentId: "student-1",
-    studentName: "学生A",
-    submittedAt: "2024-08-12T14:20:00",
-    status: "COMPLETED" as SubmissionStatus,
-    submissionId: "submission-1",
-  },
-  {
-    id: "sa-6",
-    assignmentTitle: "8月1日作业",
-    assignmentId: "assignment-2024-08-01",
-    studentId: "student-3",
-    studentName: "学生C",
-    submittedAt: "2024-08-12T15:00:00",
-    status: "PENDING" as SubmissionStatus,
-    submissionId: "submission-3",
-  },
-];
-
-const mockStats = {
-  pending: 1,
-  inProgress: 1,
-  completed: 2,
-  total: 4,
-};
 
 export default function TADashboard() {
-  const pendingAssignments = mockAssignments.filter((a) => a.status === "PENDING");
-  const gradingAssignments = mockAssignments.filter((a) => a.status === "GRADING");
-  const completedAssignments = mockAssignments.filter((a) => a.status === "COMPLETED");
+  const [loading, setLoading] = React.useState(true);
+  const [assignments, setAssignments] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    // TODO: Fetch from API - /api/ta/assignments
+    // For now, show empty state
+    setLoading(false);
+  }, []);
+
+  const stats = {
+    total: assignments.length,
+    pending: assignments.filter((a) => a.status === "PENDING").length,
+    inProgress: assignments.filter((a) => a.status === "GRADING").length,
+    completed: assignments.filter((a) => a.status === "COMPLETED").length,
+  };
+
+  const pendingAssignments = assignments.filter((a) => a.status === "PENDING");
+  const gradingAssignments = assignments.filter((a) => a.status === "GRADING");
+  const completedAssignments = assignments.filter((a) => a.status === "COMPLETED");
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -76,10 +37,7 @@ export default function TADashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold">助教控制台</h1>
-                <Badge variant="outline">{mockTAName}</Badge>
-              </div>
+              <h1 className="text-2xl font-bold">助教控制台</h1>
               <p className="text-sm text-muted-foreground">
                 查看并批改分配给你的提交
               </p>
@@ -92,161 +50,169 @@ export default function TADashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>分配总数</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.total}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Star className="h-4 w-4 mr-1" />
-                所有作业
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>待处理</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.pending}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Clock className="h-4 w-4 mr-1" />
-                尚未开始
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>进行中</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.inProgress}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                正在批改
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>已完成</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.completed}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                已完成批改
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Pending Grading */}
-        {(pendingAssignments.length > 0 || gradingAssignments.length > 0) && (
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>待批改</CardTitle>
-                  <CardDescription>
-                    {pendingAssignments.length + gradingAssignments.length} 份作业需要处理
-                  </CardDescription>
-                </div>
-                <Badge variant="destructive">
-                  {pendingAssignments.length + gradingAssignments.length}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[...pendingAssignments, ...gradingAssignments].map((assignment) => (
-                  <div
-                    key={assignment.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="font-medium">{assignment.studentName}</span>
-                        <StatusBadge status={assignment.status} />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        提交于 {format(new Date(assignment.submittedAt), "MM月dd日 HH:mm")}
-                      </p>
-                    </div>
-                    <Link href={`/ta/assignments/${assignment.id}`}>
-                      <Button>开始批改</Button>
-                    </Link>
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">加载中...</p>
+          </div>
+        ) : (
+          <>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>分配总数</CardDescription>
+                  <CardTitle className="text-3xl">{stats.total}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Star className="h-4 w-4 mr-1" />
+                    所有作业
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
 
-        {/* Completed Grading */}
-        {completedAssignments.length > 0 && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>已完成批改</CardTitle>
-                  <CardDescription>
-                    {completedAssignments.length} 份作业已完成
-                  </CardDescription>
-                </div>
-                <Badge variant="secondary">{completedAssignments.length}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {completedAssignments.map((assignment) => (
-                  <div
-                    key={assignment.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="font-medium">{assignment.studentName}</span>
-                        <StatusBadge status={assignment.status} />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        批改于 {format(new Date(assignment.submittedAt), "MM月dd日 HH:mm")}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Link href={`/ta/assignments/${assignment.id}`}>
-                        <Button variant="outline" size="sm">
-                          查看
-                        </Button>
-                      </Link>
-                    </div>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>待处理</CardDescription>
+                  <CardTitle className="text-3xl">{stats.pending}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4 mr-1" />
+                    尚未开始
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
 
-        {/* Empty State */}
-        {mockAssignments.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">暂无分配的作业</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                目前还没有分配给你批改的提交。
-              </p>
-              <p className="text-sm text-muted-foreground">
-                请稍后再来查看，或联系管理员了解更多信息。
-              </p>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>进行中</CardDescription>
+                  <CardTitle className="text-3xl">{stats.inProgress}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    正在批改
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>已完成</CardDescription>
+                  <CardTitle className="text-3xl">{stats.completed}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    已完成批改
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Pending Grading */}
+            {(pendingAssignments.length > 0 || gradingAssignments.length > 0) && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>待批改</CardTitle>
+                      <CardDescription>
+                        {pendingAssignments.length + gradingAssignments.length} 份作业需要处理
+                      </CardDescription>
+                    </div>
+                    <Badge variant="destructive">
+                      {pendingAssignments.length + gradingAssignments.length}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[...pendingAssignments, ...gradingAssignments].map((assignment) => (
+                      <div
+                        key={assignment.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="font-medium">{assignment.studentName}</span>
+                            <StatusBadge status={assignment.status} />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            提交于 {format(new Date(assignment.submittedAt), "MM月dd日 HH:mm")}
+                          </p>
+                        </div>
+                        <Link href={`/ta/assignments/${assignment.id}`}>
+                          <Button>开始批改</Button>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Completed Grading */}
+            {completedAssignments.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>已完成批改</CardTitle>
+                      <CardDescription>
+                        {completedAssignments.length} 份作业已完成
+                      </CardDescription>
+                    </div>
+                    <Badge variant="secondary">{completedAssignments.length}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {completedAssignments.map((assignment) => (
+                      <div
+                        key={assignment.id}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="font-medium">{assignment.studentName}</span>
+                            <StatusBadge status={assignment.status} />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            批改于 {format(new Date(assignment.submittedAt), "MM月dd日 HH:mm")}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Link href={`/ta/assignments/${assignment.id}`}>
+                            <Button variant="outline" size="sm">
+                              查看
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Empty State */}
+            {assignments.length === 0 && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">暂无分配的作业</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    目前还没有分配给你批改的提交。
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    请稍后再来查看，或联系管理员了解更多信息。
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
 
         {/* Quick Tips */}

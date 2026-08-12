@@ -10,39 +10,30 @@ import { FileUpload } from "@/components/submission/file-upload";
 import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
 
-// 模拟作业数据 - 实际应用中应来自 API
-const mockAssignment = {
-  id: "assignment-2024-08-01",
-  title: "8月1日作业",
-  description: `请完成以下练习：
-
-1. 阅读第一章并回答理解性问题
-2. 围绕核心概念撰写 200 字的读书感悟
-3. 完成本章末尾的练习题
-
-请以清晰的图片或 PDF 形式提交作业，确保所有文字清晰可读。`,
-  deadline: "2026-08-20T23:59:59",
-  allowResubmission: true,
-  resubmissionDescription: "请说明你根据助教反馈做了哪些修改",
-};
-
 export default function AssignmentPage() {
   const params = useParams();
   const router = useRouter();
+  const [loading, setLoading] = React.useState(true);
+  const [assignment, setAssignment] = React.useState<any>(null);
+  const [submission, setSubmission] = React.useState<any>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
-  const [hasSubmitted, setHasSubmitted] = React.useState(false);
-  const [submission, setSubmission] = React.useState<{
-    id: string;
-    status: "PENDING" | "GRADING" | "COMPLETED" | "RESUBMISSION_REQUIRED" | "RESUBMITTED";
-    submittedAt: string;
-  }>({
-    id: "submission-1",
-    status: "COMPLETED",
-    submittedAt: "2024-08-12T14:20:00",
-  });
 
-  const isDeadlinePassed = new Date(mockAssignment.deadline) < new Date();
+  React.useEffect(() => {
+    // TODO: Fetch assignment data from API
+    // const fetchData = async () => {
+    //   const [assignmentRes, submissionRes] = await Promise.all([
+    //     fetch(`/api/assignments/${params.id}`),
+    //     fetch(`/api/submissions/by-assignment/${params.id}`)
+    //   ]);
+    //   const assignmentData = await assignmentRes.json();
+    //   const submissionData = await submissionRes.json();
+    //   setAssignment(assignmentData);
+    //   setSubmission(submissionData);
+    //   setLoading(false);
+    // };
+    setLoading(false);
+  }, [params.id]);
 
   const handleSubmit = async () => {
     if (uploadedFiles.length === 0) {
@@ -52,30 +43,39 @@ export default function AssignmentPage() {
 
     setIsSubmitting(true);
 
-    // 模拟 API 调用
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    console.log("Submitting files:", uploadedFiles);
-
-    // 实际应用中会：
-    // 1. 上传文件到存储
-    // 2. 通过 API 创建提交
-    // 3. 跳转到成功页面
-
-    setHasSubmitted(true);
-    setSubmission({
-      id: `submission-${Date.now()}`,
-      status: "PENDING",
-      submittedAt: new Date().toISOString(),
-    });
+    // TODO: Upload files and create submission via API
+    // 1. Upload files to storage
+    // 2. Create submission with file URLs
+    // 3. Update UI state
 
     setIsSubmitting(false);
   };
 
-  const canShowResubmissionButton =
-    isDeadlinePassed &&
-    mockAssignment.allowResubmission &&
-    submission.status === "RESUBMISSION_REQUIRED";
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <p className="text-muted-foreground">加载中...</p>
+      </div>
+    );
+  }
+
+  if (!assignment) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground mb-4">未找到作业</p>
+            <Button variant="outline" onClick={() => router.push("/")}>
+              返回首页
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const isDeadlinePassed = new Date(assignment.deadline) < new Date();
+  const hasSubmitted = !!submission;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -85,8 +85,8 @@ export default function AssignmentPage() {
           <div className="flex items-center justify-between">
             <div>
               <Badge variant="outline" className="mb-2">作业</Badge>
-              <h1 className="text-2xl font-bold">{mockAssignment.title}</h1>
-              <p className="text-sm text-muted-foreground">{mockAssignment.id}</p>
+              <h1 className="text-2xl font-bold">{assignment.title}</h1>
+              <p className="text-sm text-muted-foreground">{assignment.id}</p>
             </div>
             <Button variant="outline" onClick={() => router.push("/")}>
               返回首页
@@ -106,7 +106,7 @@ export default function AssignmentPage() {
                   <CardDescription>提交前请先查看作业要求</CardDescription>
                 </div>
                 {hasSubmitted ? (
-                  <StatusBadge status={submission.status} />
+                  <StatusBadge status={submission?.status} />
                 ) : isDeadlinePassed ? (
                   <Badge variant="destructive">已截止</Badge>
                 ) : (
@@ -116,7 +116,7 @@ export default function AssignmentPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="prose dark:prose-invert max-w-none">
-                <p className="whitespace-pre-line">{mockAssignment.description}</p>
+                <p className="whitespace-pre-line">{assignment.description}</p>
               </div>
 
               <div className="flex items-center gap-4 pt-4 border-t">
@@ -124,62 +124,18 @@ export default function AssignmentPage() {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">截止时间：</span>
                   <span className={isDeadlinePassed ? "text-destructive font-medium" : ""}>
-                    {format(new Date(mockAssignment.deadline), "yyyy年MM月dd日 HH:mm")}
+                    {format(new Date(assignment.deadline), "yyyy年MM月dd日 HH:mm")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">
-                    {mockAssignment.allowResubmission ? "允许重新提交" : "不允许重新提交"}
+                    {assignment.allowResubmission ? "允许重新提交" : "不允许重新提交"}
                   </span>
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          {/* Submission Status */}
-          {hasSubmitted && (
-            <Card className="border-green-200 bg-green-50 dark:bg-green-900/10">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                  <div>
-                    <CardTitle className="text-green-900 dark:text-green-100">
-                      提交成功
-                    </CardTitle>
-                    <CardDescription className="text-green-700 dark:text-green-300">
-                      你的作业已提交，正在等待助教批阅
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">提交编号：</span>
-                    <span className="font-mono">{submission.id}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">提交时间：</span>
-                    <span>{format(new Date(submission.submittedAt), "yyyy年MM月dd日 HH:mm")}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">已上传文件：</span>
-                    <span>{uploadedFiles.length} 个文件</span>
-                  </div>
-                </div>
-
-                {submission.status === "COMPLETED" && (
-                  <div className="mt-4 pt-4 border-t border-green-200">
-                    <Button variant="outline" size="sm">
-                      <FileText className="h-4 w-4 mr-2" />
-                      查看反馈
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
 
           {/* Submission Form */}
           {!hasSubmitted && !isDeadlinePassed && (
@@ -232,60 +188,8 @@ export default function AssignmentPage() {
                     <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">
                       提交截止时间已过
                     </h3>
-                    <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
                       本作业的提交期已结束，不再接受正常提交。
-                      {mockAssignment.allowResubmission &&
-                        " 如果你被要求重新提交，请使用重新提交通道。"}
-                    </p>
-                    {canShowResubmissionButton && (
-                      <Button
-                        onClick={() => router.push(`/assignment/${params.id}/resubmit`)}
-                        variant="outline"
-                      >
-                        提交重新提交
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Existing Submission with Feedback */}
-          {hasSubmitted && submission.status === "COMPLETED" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>批改结果</CardTitle>
-                <CardDescription>分配给你的助教的反馈</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {/* TA 1 Feedback */}
-                  <div className="border rounded-lg p-4">
-                    <div className="mb-3">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <span className="font-medium">助教01</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      第 1 题解答正确。第 2、3 题请修改，使表达更清晰。
-                    </p>
-                    <Button variant="outline" size="sm">
-                      查看反馈文件
-                    </Button>
-                  </div>
-
-                  {/* TA 2 Feedback */}
-                  <div className="border rounded-lg p-4">
-                    <div className="mb-3">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <span className="font-medium">助教03</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      整体表现不错。解释清晰，答案结构合理。
                     </p>
                   </div>
                 </div>

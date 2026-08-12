@@ -7,49 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// 模拟数据 - 实际应用中应来自 API
-const mockAssignments = [
-  {
-    id: "assignment-2024-08-01",
-    title: "8月1日作业",
-    deadline: "2026-08-20T23:59:59",
-    totalSubmissions: 86,
-    completedGrading: 62,
-    pendingGrading: 24,
-    resubmissions: 3,
-    gradingProgress: 72,
-  },
-  {
-    id: "assignment-2024-08-08",
-    title: "8月8日作业",
-    deadline: "2026-09-01T23:59:59",
-    totalSubmissions: 93,
-    completedGrading: 38,
-    pendingGrading: 55,
-    resubmissions: 1,
-    gradingProgress: 41,
-  },
-  {
-    id: "assignment-2024-08-12",
-    title: "8月12日作业",
-    deadline: "2026-08-15T23:59:59",
-    totalSubmissions: 45,
-    completedGrading: 12,
-    pendingGrading: 33,
-    resubmissions: 0,
-    gradingProgress: 27,
-  },
-];
-
-const mockStats = {
-  totalAssignments: 3,
-  totalSubmissions: 224,
-  pendingGrading: 112,
-  completedGrading: 112,
-  pendingResubmissions: 4,
-};
-
 export default function AdminDashboard() {
+  const [loading, setLoading] = React.useState(true);
+  const [assignments, setAssignments] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    // TODO: Fetch from API - /api/assignments
+    setLoading(false);
+  }, []);
+
+  const stats = {
+    totalAssignments: assignments.length,
+    totalSubmissions: assignments.reduce((sum, a) => sum + (a.totalSubmissions || 0), 0),
+    pendingGrading: assignments.reduce((sum, a) => sum + (a.pendingGrading || 0), 0),
+    completedGrading: assignments.reduce((sum, a) => sum + (a.completedGrading || 0), 0),
+    pendingResubmissions: assignments.reduce((sum, a) => sum + (a.resubmissions || 0), 0),
+  };
+
   const isDeadlinePassed = (deadline: string) => {
     return new Date(deadline) < new Date();
   };
@@ -96,154 +70,178 @@ export default function AdminDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>作业总数</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.totalAssignments}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4 mr-1" />
-                进行中的作业
-              </div>
-            </CardContent>
-          </Card>
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">加载中...</p>
+          </div>
+        ) : (
+          <>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>作业总数</CardDescription>
+                  <CardTitle className="text-3xl">{stats.totalAssignments}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    进行中的作业
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>提交总数</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.totalSubmissions}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Users className="h-4 w-4 mr-1" />
-                学生提交数
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>提交总数</CardDescription>
+                  <CardTitle className="text-3xl">{stats.totalSubmissions}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Users className="h-4 w-4 mr-1" />
+                    学生提交数
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>待批改</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.pendingGrading}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Clock className="h-4 w-4 mr-1" />
-                等待助教批阅
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>待批改</CardDescription>
+                  <CardTitle className="text-3xl">{stats.pendingGrading}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4 mr-1" />
+                    等待助教批阅
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>已完成批改</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.completedGrading}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                已完成批改
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>已完成批改</CardDescription>
+                  <CardTitle className="text-3xl">{stats.completedGrading}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    已完成批改
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>待处理重新提交</CardDescription>
-              <CardTitle className="text-3xl">{mockStats.pendingResubmissions}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                需要关注
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Assignments Table */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>作业列表</CardTitle>
-                <CardDescription>管理并监控所有作业</CardDescription>
-              </div>
-              <Badge variant="secondary">{mockAssignments.length} 个作业</Badge>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>待处理重新提交</CardDescription>
+                  <CardTitle className="text-3xl">{stats.pendingResubmissions}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    需要关注
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-4 font-medium">作业</th>
-                    <th className="text-left p-4 font-medium">截止时间</th>
-                    <th className="text-center p-4 font-medium">提交数</th>
-                    <th className="text-center p-4 font-medium">批改进度</th>
-                    <th className="text-center p-4 font-medium">状态</th>
-                    <th className="text-right p-4 font-medium">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockAssignments.map((assignment) => (
-                    <tr key={assignment.id} className="border-b hover:bg-slate-50 dark:hover:bg-slate-800">
-                      <td className="p-4">
-                        <div>
-                          <div className="font-medium">{assignment.title}</div>
-                          <div className="text-sm text-muted-foreground">{assignment.id}</div>
-                        </div>
-                      </td>
-                      <td className="p-4">{formatDeadline(assignment.deadline)}</td>
-                      <td className="p-4 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="font-medium">{assignment.totalSubmissions}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {assignment.resubmissions} 次重新提交
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${assignment.gradingProgress}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-medium">{assignment.gradingProgress}%</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground text-center mt-1">
-                          {assignment.completedGrading} / {assignment.totalSubmissions * 2}
-                        </div>
-                      </td>
-                      <td className="p-4 text-center">
-                        {isDeadlinePassed(assignment.deadline) ? (
-                          <Badge variant="destructive">已截止</Badge>
-                        ) : (
-                          <Badge variant="default">进行中</Badge>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex justify-end gap-2">
-                          <Link href={`/admin/assignments/${assignment.id}`}>
-                            <Button variant="outline" size="sm">
-                              <BarChart3 className="h-4 w-4 mr-1" />
-                              查看详情
-                            </Button>
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+
+            {/* Assignments Table */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>作业列表</CardTitle>
+                    <CardDescription>管理并监控所有作业</CardDescription>
+                  </div>
+                  <Badge variant="secondary">{assignments.length} 个作业</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {assignments.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">暂无作业</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      点击"创建作业"开始创建第一个作业。
+                    </p>
+                    <Link href="/admin/assignments/create">
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        创建作业
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-4 font-medium">作业</th>
+                          <th className="text-left p-4 font-medium">截止时间</th>
+                          <th className="text-center p-4 font-medium">提交数</th>
+                          <th className="text-center p-4 font-medium">批改进度</th>
+                          <th className="text-center p-4 font-medium">状态</th>
+                          <th className="text-right p-4 font-medium">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {assignments.map((assignment) => (
+                          <tr key={assignment.id} className="border-b hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <td className="p-4">
+                              <div>
+                                <div className="font-medium">{assignment.title}</div>
+                                <div className="text-sm text-muted-foreground">{assignment.id}</div>
+                              </div>
+                            </td>
+                            <td className="p-4">{formatDeadline(assignment.deadline)}</td>
+                            <td className="p-4 text-center">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="font-medium">{assignment.totalSubmissions}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {assignment.resubmissions} 次重新提交
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-primary"
+                                    style={{ width: `${assignment.gradingProgress}%` }}
+                                  />
+                                </div>
+                                <span className="text-sm font-medium">{assignment.gradingProgress}%</span>
+                              </div>
+                              <div className="text-xs text-muted-foreground text-center mt-1">
+                                {assignment.completedGrading} / {assignment.totalSubmissions * 2}
+                              </div>
+                            </td>
+                            <td className="p-4 text-center">
+                              {isDeadlinePassed(assignment.deadline) ? (
+                                <Badge variant="destructive">已截止</Badge>
+                              ) : (
+                                <Badge variant="default">进行中</Badge>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex justify-end gap-2">
+                                <Link href={`/admin/assignments/${assignment.id}`}>
+                                  <Button variant="outline" size="sm">
+                                    <BarChart3 className="h-4 w-4 mr-1" />
+                                    查看详情
+                                  </Button>
+                                </Link>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         {/* Quick Actions */}
         <div className="mt-8 grid md:grid-cols-3 gap-6">
@@ -253,22 +251,8 @@ export default function AdminDashboard() {
               <CardDescription>最新的提交与批改更新</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span>学生A 提交了 8月1日作业</span>
-                  <span className="text-muted-foreground ml-auto">2 分钟前</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span>助教01 完成了 学生B 的批改</span>
-                  <span className="text-muted-foreground ml-auto">15 分钟前</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-amber-500" />
-                  <span>学生C 申请了重新提交</span>
-                  <span className="text-muted-foreground ml-auto">1 小时前</span>
-                </div>
+              <div className="text-center py-6 text-sm text-muted-foreground">
+                暂无动态
               </div>
             </CardContent>
           </Card>
@@ -279,34 +263,8 @@ export default function AdminDashboard() {
               <CardDescription>各助教的批改完成情况</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span>助教01</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500" style={{ width: "85%" }} />
-                    </div>
-                    <span className="font-medium">85%</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span>助教02</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500" style={{ width: "72%" }} />
-                    </div>
-                    <span className="font-medium">72%</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span>助教03</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-500" style={{ width: "45%" }} />
-                    </div>
-                    <span className="font-medium">45%</span>
-                  </div>
-                </div>
+              <div className="text-center py-6 text-sm text-muted-foreground">
+                暂无数据
               </div>
             </CardContent>
           </Card>
@@ -318,14 +276,6 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span>在线助教</span>
-                  <Badge variant="secondary">5 人在线</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span>活跃学生</span>
-                  <Badge variant="secondary">12 人活跃</Badge>
-                </div>
                 <div className="flex items-center justify-between text-sm">
                   <span>系统负载</span>
                   <Badge variant="default">正常</Badge>
