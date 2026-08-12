@@ -20,8 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
+import { useRequireAuth } from "@/lib/auth/use-require-auth";
 
 export default function TAGradingPage() {
+  useRequireAuth();
   const params = useParams();
   const router = useRouter();
   const [loading, setLoading] = React.useState(true);

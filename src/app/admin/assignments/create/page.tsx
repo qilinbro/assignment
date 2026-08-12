@@ -16,8 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useRequireAuth } from "@/lib/auth/use-require-auth";
+import { getAllUsers } from "@/lib/auth/auth-storage";
 
 export default function CreateAssignmentPage() {
+  useRequireAuth();
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [tas, setTas] = React.useState<any[]>([]);
@@ -25,12 +28,10 @@ export default function CreateAssignmentPage() {
   const [selectedTAs, setSelectedTAs] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    // TODO: Fetch TAs from API - /api/users?role=TA
-    // const fetchTAs = async () => {
-    //   const response = await fetch('/api/users?role=TA');
-    //   const data = await response.json();
-    //   setTas(data);
-    // };
+    // 从 localStorage 获取助教列表
+    const allUsers = getAllUsers();
+    const taUsers = allUsers.filter((u) => u.role === "TA");
+    setTas(taUsers);
   }, []);
 
   const toggleTA = (taId: string) => {

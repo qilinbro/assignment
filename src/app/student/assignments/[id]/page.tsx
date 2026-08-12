@@ -10,8 +10,10 @@ import { ImagePreview } from "@/components/submission/image-preview";
 import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
 import type { SubmissionStatus } from "@/types";
+import { useRequireAuth } from "@/lib/auth/use-require-auth";
 
 export default function StudentAssignmentDetailPage() {
+  useRequireAuth();
   const params = useParams();
   const router = useRouter();
   const [loading, setLoading] = React.useState(true);

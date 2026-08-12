@@ -2,18 +2,41 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus, BarChart3, Calendar, Users, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useRequireAuth } from "@/lib/auth/use-require-auth";
+import { useAuth } from "@/components/providers/auth-provider";
+
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "管理员",
+  TA: "助教",
+  STUDENT: "学生",
+};
 
 export default function AdminDashboard() {
+  useRequireAuth();
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
   const [loading, setLoading] = React.useState(true);
   const [assignments, setAssignments] = React.useState<any[]>([]);
+  const [users, setUsers] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    // TODO: Fetch from API - /api/assignments
-    setLoading(false);
+    // 从数据库读取全部用户
+    fetch("/api/users")
+      .then((r) => (r.ok ? r.json() : { users: [] }))
+      .then((d) => setUsers(d.users || []))
+      .catch(() => setUsers([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const stats = {
@@ -51,7 +74,10 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">管理员控制台</h1>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-2xl font-bold">管理员控制台</h1>
+                {user && <Badge variant="outline">{user.name}</Badge>}
+              </div>
               <p className="text-sm text-muted-foreground">管理作业并查看统计数据</p>
             </div>
             <div className="flex gap-3">
@@ -61,9 +87,7 @@ export default function AdminDashboard() {
                   创建作业
                 </Button>
               </Link>
-              <Link href="/login">
-                <Button variant="outline">退出登录</Button>
-              </Link>
+              <Button variant="outline" onClick={handleLogout}>退出登录</Button>
             </div>
           </div>
         </div>
@@ -238,6 +262,53 @@ export default function AdminDashboard() {
                     </table>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* 用户管理 */}
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>用户管理</CardTitle>
+                    <CardDescription>已注册的用户（共 {users.length} 人）</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary">助教 {users.filter((u) => u.role === "TA").length}</Badge>
+                    <Badge variant="secondary">学生 {users.filter((u) => u.role === "STUDENT").length}</Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-3 font-medium">姓名</th>
+                        <th className="text-left p-3 font-medium">邮箱</th>
+                        <th className="text-left p-3 font-medium">身份</th>
+                        <th className="text-left p-3 font-medium">注册时间</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((u) => (
+                        <tr key={u.id} className="border-b hover:bg-slate-50 dark:hover:bg-slate-800">
+                          <td className="p-3 font-medium">{u.name}</td>
+                          <td className="p-3 text-muted-foreground">{u.email}</td>
+                          <td className="p-3">
+                            <Badge variant="outline">{ROLE_LABELS[u.role]}</Badge>
+                            {u.mustChangePassword && (
+                              <Badge variant="secondary" className="ml-1 text-xs">待改密</Badge>
+                            )}
+                          </td>
+                          <td className="p-3 text-muted-foreground text-sm">
+                            {new Date(u.createdAt).toLocaleDateString("zh-CN")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </CardContent>
             </Card>
           </>

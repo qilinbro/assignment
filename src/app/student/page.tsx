@@ -2,15 +2,27 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BookOpen, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/assignment/status-badge";
+import { useRequireAuth } from "@/lib/auth/use-require-auth";
+import { useAuth } from "@/components/providers/auth-provider";
 import { format } from "date-fns";
 import type { SubmissionStatus } from "@/types";
 
 export default function StudentDashboard() {
+  useRequireAuth();
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
   const [loading, setLoading] = React.useState(true);
   const [submissions, setSubmissions] = React.useState<any[]>([]);
 
@@ -60,12 +72,15 @@ export default function StudentDashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">学生控制台</h1>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-2xl font-bold">学生控制台</h1>
+                {user && <Badge variant="outline">{user.name}</Badge>}
+              </div>
               <p className="text-sm text-muted-foreground">
                 查看你的提交与反馈
               </p>
             </div>
-            <Button variant="outline" onClick={() => (window.location.href = "/login")}>
+            <Button variant="outline" onClick={handleLogout}>
               退出登录
             </Button>
           </div>
