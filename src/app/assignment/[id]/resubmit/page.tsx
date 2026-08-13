@@ -2,266 +2,142 @@
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, RefreshCw, FileText, AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, FileText, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload } from "@/components/submission/file-upload";
-import { StatusBadge } from "@/components/assignment/status-badge";
+import { ImagePreview } from "@/components/submission/image-preview";
 import { format } from "date-fns";
-import type { SubmissionStatus } from "@/types";
+import { useRequireAuth } from "@/lib/auth/use-require-auth";
 
 export default function ResubmissionPage() {
+  useRequireAuth();
   const params = useParams();
   const router = useRouter();
   const [loading, setLoading] = React.useState(true);
   const [assignment, setAssignment] = React.useState<any>(null);
   const [submission, setSubmission] = React.useState<any>(null);
   const [feedback, setFeedback] = React.useState<any[]>([]);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
-  const [resubmissionReason, setResubmissionReason] = React.useState("");
+  const [reason, setReason] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [success, setSuccess] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
-    // TODO: Fetch data from API
-    setLoading(false);
+    const load = async () => {
+      try {
+        const [assignmentRes, submissionsRes] = await Promise.all([
+          fetch(`/api/assignments/${params.id}`),
+          fetch("/api/submissions"),
+        ]);
+        const assignmentData = assignmentRes.ok ? await assignmentRes.json() : null;
+        const submissions = submissionsRes.ok ? await submissionsRes.json() : [];
+        const current = (Array.isArray(submissions) ? submissions : []).find((item: any) => item.assignmentId === params.id);
+        setAssignment(assignmentData);
+        setSubmission(current || null);
+        if (current) {
+          const feedbackRes = await fetch(`/api/feedback?submissionId=${current.id}`);
+          if (feedbackRes.ok) {
+            const feedbackData = await feedbackRes.json();
+            setFeedback(Array.isArray(feedbackData) ? feedbackData : []);
+          }
+        }
+      } catch {
+        setError("暂时无法加载这份作业，请稍后重试。");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [params.id]);
 
   const handleSubmit = async () => {
-    if (uploadedFiles.length === 0) {
-      alert("请至少上传一个文件");
-      return;
-    }
-    if (!resubmissionReason.trim()) {
-      alert("请填写重新提交的原因");
-      return;
-    }
+    setError("");
+    setSuccess("");
+    if (!submission) return setError("找不到原始提交记录。");
+    if (uploadedFiles.length === 0) return setError("请至少上传一个修改后的文件。");
+    if (!reason.trim()) return setError("请简要说明你做了哪些修改。");
+
     setIsSubmitting(true);
     try {
-      // 获取当前学生的提交记录，找到 submissionId
-      const mySubsRes = await fetch("/api/submissions");
-      const mySubs = await mySubsRes.json();
-      const mySub = (Array.isArray(mySubs) ? mySubs : []).find(
-        (s: any) => s.assignmentId === params.id
-      );
-      if (!mySub) {
-        alert("找不到原始提交记录");
-        setIsSubmitting(false);
-        return;
-      }
-      // 上传文件
       const files = [];
       for (const file of uploadedFiles) {
-        const fd = new FormData();
-        fd.append("file", file);
-        const upRes = await fetch("/api/upload", { method: "POST", body: fd });
-        const upData = await upRes.json();
-        if (!upRes.ok) throw new Error(upData.error || "上传失败");
-        files.push({ url: upData.url, fileName: upData.fileName, fileType: upData.fileType, size: upData.size });
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) throw new Error(uploadData.error || "文件上传失败");
+        files.push({ url: uploadData.url, fileName: uploadData.fileName, fileType: uploadData.fileType, size: uploadData.size });
       }
-      // 创建重新提交
+
       const res = await fetch("/api/resubmissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionId: mySub.id, reason: resubmissionReason, files }),
+        body: JSON.stringify({ submissionId: submission.id, reason: reason.trim(), files }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "重新提交失败");
-      router.push(`/assignment/${params.id}`);
+      setSuccess("已提交修改版本，助教会重新查看。正在返回作业详情…");
+      window.setTimeout(() => router.push(`/assignment/${params.id}`), 900);
     } catch (e: any) {
-      alert(e.message || "重新提交失败");
+      setError(e.message || "重新提交失败");
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <p className="text-muted-foreground">加载中...</p>
-      </div>
-    );
+    return <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950"><p className="text-sm text-muted-foreground">正在加载重交要求…</p></div>;
   }
 
-  if (!assignment) {
+  if (!assignment || !submission) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <h2 className="text-lg font-semibold mb-2">作业不存在</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                无法找到该作业。
-              </p>
-              <Button onClick={() => router.push("/")}>返回首页</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!assignment.allowResubmission) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <h2 className="text-lg font-semibold mb-2">不允许重新提交</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                本作业不允许重新提交。
-              </p>
-              <Button onClick={() => router.push("/")}>返回首页</Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
+        <Card className="w-full max-w-md"><CardContent className="p-8 text-center">
+          <AlertCircle className="mx-auto mb-4 h-10 w-10 text-amber-600" />
+          <h1 className="text-lg font-semibold">暂时无法开始重新提交</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{error || "未找到作业或原始提交记录。"}</p>
+          <Button className="mt-5" variant="outline" onClick={() => router.push("/student")}>返回作业列表</Button>
+        </CardContent></Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Header */}
-      <header className="border-b bg-white dark:bg-slate-800">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push(`/assignment/${params.id}`)}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <Badge variant="outline" className="mb-2">重新提交</Badge>
-              <h1 className="text-2xl font-bold">{assignment.title}</h1>
-              <p className="text-sm text-muted-foreground">{assignment.id}</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <header className="border-b bg-white/90 dark:bg-slate-900/90">
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4 sm:px-6">
+          <Button variant="ghost" size="icon" onClick={() => router.push(`/assignment/${params.id}`)} aria-label="返回作业详情"><ArrowLeft className="h-4 w-4" /></Button>
+          <div className="min-w-0"><p className="text-xs text-muted-foreground">重新提交</p><h1 className="truncate text-xl font-bold">{assignment.title}</h1></div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="space-y-6">
-          {/* Original Submission Info */}
-          {submission && (
-            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10">
-              <CardHeader>
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-6 w-6 text-amber-600 mt-1" />
-                  <div>
-                    <CardTitle className="text-amber-900 dark:text-amber-100">
-                      需要重新提交
-                    </CardTitle>
-                    <CardDescription className="text-amber-700 dark:text-amber-300">
-                      根据助教反馈，你的原始提交需要修改
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm">
-                  <p className="text-muted-foreground mb-1">原始提交：</p>
-                  <p className="font-medium">
-                    {format(new Date(submission.submittedAt), "yyyy年MM月dd日 HH:mm")}
-                  </p>
-                </div>
+      <main className="mx-auto max-w-5xl space-y-5 px-4 py-6 sm:px-6 sm:py-8">
+        <Card className="border-amber-200 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/20">
+          <CardContent className="flex gap-3 p-5">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+            <div><h2 className="font-semibold text-amber-950 dark:text-amber-100">请根据反馈修改后重新提交</h2><p className="mt-1 text-sm leading-6 text-amber-900/75 dark:text-amber-200/80">原始提交于 {format(new Date(submission.submittedAt), "yyyy年MM月dd日 HH:mm")}，原记录会被完整保留。</p></div>
+          </CardContent>
+        </Card>
 
-                {feedback.length > 0 && (
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium">助教反馈：</p>
-                    {feedback.map((fb) => (
-                      <div key={fb.taId} className="border rounded-lg p-3 bg-background">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{fb.taName}</span>
-                          <Badge variant="outline" className="text-sm">
-                            分数：{fb.score}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{fb.comment}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+        {feedback.length > 0 && <Card><CardHeader><CardTitle className="text-lg">助教反馈</CardTitle></CardHeader><CardContent className="space-y-3">
+          {feedback.map((item, index) => <div key={item.id || index} className="rounded-lg border bg-slate-50/70 p-4 dark:bg-slate-900/60"><div className="mb-2 flex flex-wrap items-center gap-2"><Badge variant="outline">助教 {index + 1}</Badge>{item.score !== undefined && <span className="text-sm text-muted-foreground">分数 {item.score}</span>}</div><p className="whitespace-pre-line text-sm leading-6">{item.comment || "请查看附件中的批注。"}</p></div>)}
+        </CardContent></Card>}
 
-                {assignment.resubmissionDescription && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                    <p className="text-sm font-medium mb-1">重新提交说明：</p>
-                    <p className="text-sm text-muted-foreground">
-                      {assignment.resubmissionDescription}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+        {assignment.resubmissionDescription && <Card><CardHeader><CardTitle className="text-lg">重新提交要求</CardTitle></CardHeader><CardContent><p className="whitespace-pre-line text-sm leading-6 text-muted-foreground">{assignment.resubmissionDescription}</p></CardContent></Card>}
 
-          {/* Resubmission Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <RefreshCw className="h-5 w-5" />
-                提交重新提交
-              </CardTitle>
-              <CardDescription>
-                上传修改后的作业并说明所做的改动
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Reason for Resubmission */}
-                <div className="space-y-2">
-                  <Label htmlFor="reason">重新提交原因 *</Label>
-                  <Textarea
-                    id="reason"
-                    placeholder="请说明你根据助教反馈做了哪些修改..."
-                    value={resubmissionReason}
-                    onChange={(e) => setResubmissionReason(e.target.value)}
-                    rows={4}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    请描述你如何回应助教的意见以及做了哪些修改
-                  </p>
-                </div>
+        {submission.files?.length > 0 && <Card><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><FileText className="h-5 w-5" />原始提交</CardTitle></CardHeader><CardContent><ImagePreview files={submission.files} /></CardContent></Card>}
 
-                {/* File Upload */}
-                <div className="space-y-2">
-                  <Label>上传修改后的作业 *</Label>
-                  <FileUpload
-                    onFilesChange={setUploadedFiles}
-                    maxFiles={10}
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    maxSizeMB={10}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    上传修改后的作业文件（JPG、PNG、WEBP - 每个不超过 10MB）
-                  </p>
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || uploadedFiles.length === 0}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isSubmitting ? "提交中..." : "提交重新提交"}
-                </Button>
-
-                {/* Notice */}
-                <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-lg">
-                  <p className="text-xs text-muted-foreground">
-                    <strong>注意：</strong>你的重新提交将由批改原始提交的同一批助教进行复审。原始提交和反馈将在系统历史中保留。
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><RefreshCw className="h-5 w-5" />上传修改后的作业</CardTitle></CardHeader><CardContent className="space-y-5">
+          <FileUpload onFilesChange={setUploadedFiles} maxFiles={10} accept="image/jpeg,image/jpg,image/png,image/webp" maxSizeMB={10} />
+          <div><label htmlFor="resubmission-reason" className="mb-2 block text-sm font-medium">修改说明</label><Textarea id="resubmission-reason" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="简要说明你根据反馈做了哪些修改" rows={4} /></div>
+          {error && <p className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300"><AlertCircle className="h-4 w-4" />{error}</p>}
+          {success && <p className="flex items-center gap-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"><CheckCircle2 className="h-4 w-4" />{success}</p>}
+          <Button className="w-full" size="lg" onClick={handleSubmit} disabled={isSubmitting || !!success}>{isSubmitting ? "提交中…" : "提交修改版本"}</Button>
+        </CardContent></Card>
       </main>
     </div>
   );

@@ -32,7 +32,7 @@ export default function Home() {
           </h2>
 
           <p className="animate-slide-up delay-100 text-lg mb-12" style={{ color: "hsl(220 10% 42%)" }}>
-            学生在线提交 · 助教看图批改 · AI 智能辅助评语
+            学生在线提交 · 助教专注批改 · 反馈清晰可追踪
           </p>
 
           <div className="animate-slide-up delay-200">
@@ -52,7 +52,7 @@ export default function Home() {
             </div>
             <div className="text-center p-4 rounded-xl" style={{ background: "hsl(40 50% 99% / 0.8)", border: "1px solid hsl(35 15% 90%)" }}>
               <div className="text-sm font-semibold mb-1" style={{ color: "hsl(160 60% 40%)" }}>助教</div>
-              <div className="text-xs" style={{ color: "hsl(220 10% 50%)" }}>看图批改 · AI 辅助</div>
+              <div className="text-xs" style={{ color: "hsl(220 10% 50%)" }}>看图批改 · 清晰反馈</div>
             </div>
             <div className="text-center p-4 rounded-xl" style={{ background: "hsl(40 50% 99% / 0.8)", border: "1px solid hsl(35 15% 90%)" }}>
               <div className="text-sm font-semibold mb-1" style={{ color: "hsl(35 75% 45%)" }}>学生</div>

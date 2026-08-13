@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resubmissionService } from "@/lib/resubmission";
 import { CreateResubmissionData } from "@/types";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
 // POST /api/resubmissions - Create a resubmission
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 });
+    }
 
     const resubmissionData: CreateResubmissionData = {
       submissionId: body.submissionId,
-      studentId: body.studentId || "student-1", // In a real app, this would come from auth
+      studentId: currentUser.id,
       reason: body.reason,
       files: body.files,
     };

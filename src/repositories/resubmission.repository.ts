@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import type { Resubmission as PrismaResubmission } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { Resubmission, CreateResubmissionData } from "@/types";
 
 export interface IResubmissionRepository {
@@ -12,7 +12,11 @@ export interface IResubmissionRepository {
   findAll(): Promise<Resubmission[]>;
 }
 
-function toDomain(r: PrismaResubmission): Resubmission {
+type PrismaResubmissionWithFiles = Prisma.ResubmissionGetPayload<{
+  include: { files: true };
+}>;
+
+function toDomain(r: PrismaResubmissionWithFiles): Resubmission {
   return {
     id: r.id,
     submissionId: r.submissionId,

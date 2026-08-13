@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import type { Feedback as PrismaFeedback } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { Feedback, CreateFeedbackData } from "@/types";
 
 export interface IFeedbackRepository {
@@ -11,7 +11,11 @@ export interface IFeedbackRepository {
   findBySubmissionId(submissionId: string): Promise<Feedback[]>;
 }
 
-function toDomain(f: PrismaFeedback): Feedback {
+type PrismaFeedbackWithFiles = Prisma.FeedbackGetPayload<{
+  include: { files: true };
+}>;
+
+function toDomain(f: PrismaFeedbackWithFiles): Feedback {
   return {
     id: f.id,
     submissionAssignmentId: f.submissionAssignmentId,

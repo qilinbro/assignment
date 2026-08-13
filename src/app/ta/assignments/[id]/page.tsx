@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Download, Star, Upload, Save } from "lucide-react";
+import { AlertCircle, ArrowLeft, Download, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ImagePreview } from "@/components/submission/image-preview";
 import { FileUpload } from "@/components/submission/file-upload";
 import { Badge } from "@/components/ui/badge";
-import { AIAssistant } from "@/components/ta/ai-assistant";
-import type { AIAnalysisResult, SubmissionStatus } from "@/types";
+import dynamic from "next/dynamic";
+import type { AIAnalysisResult } from "@/types";
 import {
   Select,
   SelectContent,
@@ -21,6 +21,13 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { useRequireAuth } from "@/lib/auth/use-require-auth";
+
+const AIAssistant = dynamic(
+  () => import("@/components/ta/ai-assistant").then((module) => module.AIAssistant),
+  { ssr: false }
+);
+
+const enableAIUI = process.env.NEXT_PUBLIC_ENABLE_AI_UI === "true";
 
 export default function TAGradingPage() {
   useRequireAuth();
@@ -32,6 +39,7 @@ export default function TAGradingPage() {
   const [comment, setComment] = React.useState("");
   const [requireResubmission, setRequireResubmission] = React.useState(false);
   const [feedbackFiles, setFeedbackFiles] = React.useState<File[]>([]);
+  const [error, setError] = React.useState("");
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -74,8 +82,9 @@ export default function TAGradingPage() {
   };
 
   const handleSubmit = async () => {
+    setError("");
     if (!comment.trim()) {
-      alert("请填写评语");
+      setError("请先填写给学生的反馈。");
       return;
     }
     setIsSubmitting(true);
@@ -100,7 +109,7 @@ export default function TAGradingPage() {
       if (!res.ok) throw new Error(data.error || "批改失败");
       router.push("/ta");
     } catch (e: any) {
-      alert(e.message || "批改失败");
+      setError(e.message || "批改失败，请稍后重试。");
       setIsSubmitting(false);
     }
   };
@@ -111,7 +120,7 @@ export default function TAGradingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
         <p className="text-muted-foreground">加载中...</p>
       </div>
     );
@@ -119,7 +128,7 @@ export default function TAGradingPage() {
 
   if (!submission) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground mb-4">未找到提交记录</p>
@@ -133,10 +142,10 @@ export default function TAGradingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Header */}
       <header className="border-b bg-white dark:bg-slate-800">
-        <div className="container mx-auto px-4 py-4">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -146,7 +155,7 @@ export default function TAGradingPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="mb-1 flex items-center gap-2">
                 <h1 className="text-xl font-bold">批改提交</h1>
                 <Badge variant="outline">{submission.assignmentTitle}</Badge>
               </div>
@@ -163,8 +172,8 @@ export default function TAGradingPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="grid lg:grid-cols-2 gap-6">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
           {/* Left Column - Student Submission */}
           <div className="lg:col-span-1 space-y-6">
             <Card>
@@ -179,36 +188,22 @@ export default function TAGradingPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">
-              <CardHeader>
-                <CardTitle className="text-blue-900 dark:text-blue-100 text-base">
-                  批改指南
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-blue-900 dark:text-blue-100">
-                <ul className="space-y-2">
-                  <li>• 仔细审阅所有上传的文件</li>
-                  <li>• 提供具体、建设性的反馈</li>
-                  <li>• 按作业标准客观评判</li>
-                  <li>• 仅在确有必要时才要求重新提交</li>
-                </ul>
-              </CardContent>
-            </Card>
+            <div className="rounded-lg border bg-slate-50 p-4 text-sm leading-6 text-muted-foreground dark:bg-slate-900">
+              先查看全部文件，再填写具体反馈；只有确实需要修改时才要求重新提交。
+            </div>
           </div>
 
           {/* Middle Column - Grading Form */}
           <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>提交批改</CardTitle>
-                <CardDescription>
-                  填写评语并上传反馈文件
-                </CardDescription>
+                <CardTitle>填写反馈</CardTitle>
+                <CardDescription>评语是必填项，反馈文件为可选项。</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Comments */}
                 <div className="space-y-2">
-                  <Label htmlFor="comment">批改评语</Label>
+                  <Label htmlFor="comment">给学生的反馈</Label>
                   <Textarea
                     id="comment"
                     placeholder="请输入给学生的反馈..."
@@ -216,14 +211,12 @@ export default function TAGradingPage() {
                     onChange={(e) => setComment(e.target.value)}
                     rows={6}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    具体说明哪些地方做得好、哪些地方需要改进
-                  </p>
+                  <p className="text-xs text-muted-foreground">建议包含做得好的地方和下一步改进方向。</p>
                 </div>
 
                 {/* Require Resubmission */}
                 <div className="space-y-2">
-                  <Label>是否要求重新提交？</Label>
+                  <Label>需要学生重新提交吗？</Label>
                   <Select
                     value={requireResubmission ? "yes" : "no"}
                     onValueChange={(value) => setRequireResubmission(value === "yes")}
@@ -232,14 +225,12 @@ export default function TAGradingPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="no">否，作业合格</SelectItem>
-                      <SelectItem value="yes">是，需要修改</SelectItem>
+                      <SelectItem value="no">不需要，反馈已完成</SelectItem>
+                      <SelectItem value="yes">需要，修改后再交</SelectItem>
                     </SelectContent>
                   </Select>
                   {requireResubmission && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400">
-                      学生需要提交修改后的版本
-                    </p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400">学生会看到反馈，并获得重新提交入口。</p>
                   )}
                 </div>
 
@@ -275,18 +266,27 @@ export default function TAGradingPage() {
                     {isSubmitting ? "提交中..." : "提交批改"}
                   </Button>
                 </div>
+                {error && (
+                  <p className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+                    <AlertCircle className="h-4 w-4" />
+                    {error}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* AI 助手：可拖动浮动面板，不占布局 */}
-        <AIAssistant
-          submissionId={submission.id}
-          assignmentTitle={submission.assignmentTitle}
-          studentFiles={submission.files || []}
-          onApplyAnalysis={handleApplyAIAnalysis}
-        />
+        {enableAIUI && (
+          <div className="mt-6 lg:max-w-[calc(56%_-_12px)]">
+            <AIAssistant
+              submissionId={submission.id}
+              assignmentTitle={submission.assignmentTitle}
+              studentFiles={submission.files || []}
+              onApplyAnalysis={handleApplyAIAnalysis}
+            />
+          </div>
+        )}
       </main>
     </div>
   );

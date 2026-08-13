@@ -117,14 +117,9 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6">
-              <p className="text-center text-sm text-muted-foreground">
-                没有账号？{" "}
-                <Link href="/register" className="text-primary hover:underline font-medium">
-                  立即注册
-                </Link>
-              </p>
-            </div>
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              账号由课程管理员统一创建，如需帮助请联系管理员。
+            </p>
           </CardContent>
         </Card>
       </main>

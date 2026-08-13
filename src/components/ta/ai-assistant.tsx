@@ -6,8 +6,6 @@ import {
   Loader2,
   CheckCircle,
   AlertTriangle,
-  ChevronDown,
-  ChevronUp,
   Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,47 +32,7 @@ export function AIAssistant({
   const [analysis, setAnalysis] = React.useState<AIAnalysisResult | null>(null);
   const [errorMsg, setErrorMsg] = React.useState("");
 
-  // 浮动面板状态
-  const [pos, setPos] = React.useState<{ x: number; y: number } | null>(null);
   const [collapsed, setCollapsed] = React.useState(true);
-  const [dragging, setDragging] = React.useState(false);
-  const dragStart = React.useRef<{ dx: number; dy: number } | null>(null);
-
-  // 初始化默认位置（右上角）
-  React.useEffect(() => {
-    if (pos === null) {
-      setPos({ x: window.innerWidth - 360, y: 96 });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pos]);
-
-  // 拖拽中监听全局鼠标事件
-  React.useEffect(() => {
-    if (!dragging) return;
-    const onMove = (e: MouseEvent) => {
-      if (!dragStart.current) return;
-      setPos({
-        x: e.clientX - dragStart.current.dx,
-        y: e.clientY - dragStart.current.dy,
-      });
-    };
-    const onUp = () => {
-      setDragging(false);
-      dragStart.current = null;
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [dragging]);
-
-  const onHandleMouseDown = (e: React.MouseEvent) => {
-    if (!pos) return;
-    dragStart.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y };
-    setDragging(true);
-  };
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
@@ -114,35 +72,28 @@ export function AIAssistant({
   };
 
   return (
-    <div
-      className="fixed z-50 w-[340px] max-w-[calc(100vw-32px)] print:hidden"
-      style={pos ? { left: pos.x, top: pos.y } : { right: 24, top: 96 }}
-    >
-      <Card className="border-purple-200 dark:border-purple-800 shadow-2xl">
-        {/* 拖拽手柄 */}
-        <div
-          onMouseDown={onHandleMouseDown}
-          className="flex items-center justify-between px-3 py-2 cursor-move border-b bg-purple-50/60 dark:bg-purple-900/20 select-none rounded-t-lg"
-        >
+    <Card className="border-purple-200 dark:border-purple-800 print:hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-purple-50/60 dark:bg-purple-900/20 rounded-t-lg">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-purple-600" />
-            <span className="font-medium text-sm">AI 批改助手</span>
+            <div>
+              <span className="font-medium text-sm">智能辅助</span>
+              <p className="text-xs text-muted-foreground">仅在需要时展开参考</p>
+            </div>
           </div>
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 w-7 p-0"
-            onMouseDown={(e) => e.stopPropagation()}
+            className="h-8 px-3"
             onClick={() => setCollapsed((c) => !c)}
-            aria-label={collapsed ? "展开" : "收起"}
           >
-            {collapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            {collapsed ? "展开" : "收起"}
           </Button>
         </div>
 
         {/* 展开内容 */}
         {!collapsed && (
-          <CardContent className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
+          <CardContent className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
             {/* 主操作按钮：分析 / 重新分析 */}
             <Button
               onClick={handleAnalyze}
@@ -256,7 +207,6 @@ export function AIAssistant({
             )}
           </CardContent>
         )}
-      </Card>
-    </div>
+    </Card>
   );
 }

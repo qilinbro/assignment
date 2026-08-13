@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import type {
+  Prisma,
   Submission as PrismaSubmission,
   SubmissionAssignment as PrismaSubmissionAssignment,
 } from "@prisma/client";
@@ -39,7 +40,11 @@ export interface ISubmissionRepository {
   ): Promise<SubmissionAssignment | null>;
 }
 
-function toDomain(s: PrismaSubmission): Submission {
+type PrismaSubmissionWithFiles = Prisma.SubmissionGetPayload<{
+  include: { files: true };
+}>;
+
+function toDomain(s: PrismaSubmissionWithFiles): Submission {
   return {
     id: s.id,
     assignmentId: s.assignmentId,
