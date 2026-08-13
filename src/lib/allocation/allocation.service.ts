@@ -5,8 +5,8 @@ import type { Assignment } from "@/types";
 /**
  * Allocation Service
  *
- * Core service for randomly assigning TAs to student submissions.
- * This is server-side logic to ensure fair and random distribution.
+ * 把每份学生提交分配给该作业选中的全部助教：所有参与助教都能看到并可以批改，
+ * 任一助教批改完成即视为该提交完成（先到先得），避免随机抽取导致部分助教看不到作业。
  */
 
 export interface AllocationResult {
@@ -49,31 +49,16 @@ class MockAllocationService implements AllocationService {
       };
     }
 
-    if (taCount <= 0) {
-      return {
-        valid: false,
-        error: "助教数量必须大于 0",
-      };
-    }
-
-    if (taCount > taIds.length) {
-      return {
-        valid: false,
-        error: `助教数量（${taCount}）不能超过可用助教的数量（${taIds.length}）`,
-      };
-    }
-
+    // 分配方式为"所有参与助教全部可见"，不再按 taCount 抽取，故无需校验 taCount
     return { valid: true };
   }
 
   /**
-   * Randomly allocate TAs to a submission
+   * Allocate a submission to TAs
    *
-   * This is the core algorithm that ensures:
-   * 1. Server-side random selection
-   * 2. Exactly N TAs are assigned
-   * 3. TAs are selected from the available pool
-   * 4. Each submission can have multiple TA assignments
+   * 为该提交分配给作业选中的全部助教：
+   * 1. 所有被选中的助教都会得到一条 SubmissionAssignment（都能看到该提交）
+   * 2. 任一助教批改完成即视为提交完成（先到先得）
    */
   async allocateTeachingAssistants(
     submissionId: string,
@@ -108,9 +93,9 @@ class MockAllocationService implements AllocationService {
       };
     }
 
-    // Randomly select N TAs from the available pool
-    // Using Fisher-Yates shuffle for unbiased random selection
-    const selectedTAIds = this.randomlySelectTAs(taIds, taCount);
+    // 所有被选中的助教都将看到并可以批改该提交（先到先得，任一批改即完成），
+    // 不再按 taCount 随机抽取部分助教，避免出现"被选中的助教看不到作业"。
+    const selectedTAIds = taIds;
 
     // Create submission assignment records for each selected TA
     const assignmentIds: string[] = [];
@@ -132,24 +117,6 @@ class MockAllocationService implements AllocationService {
       assignedTAs: selectedTAIds,
       submissionAssignmentIds: assignmentIds,
     };
-  }
-
-  /**
-   * Randomly select N TAs from the available pool
-   * Uses Fisher-Yates shuffle for unbiased random selection
-   */
-  private randomlySelectTAs(taIds: string[], count: number): string[] {
-    // Create a copy of the array to avoid modifying the original
-    const shuffled = [...taIds];
-
-    // Fisher-Yates shuffle
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-
-    // Return the first N elements
-    return shuffled.slice(0, count);
   }
 
   /**

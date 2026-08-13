@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeft, Calendar, CheckCircle2, Clock3, User } from "lucide-react";
+import { Clock, Calendar, User, FileText, CheckCircle, AlertCircle, Download, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/submission/file-upload";
+import { ImagePreview } from "@/components/submission/image-preview";
 import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
 import { useRequireAuth } from "@/lib/auth/use-require-auth";
@@ -147,13 +148,107 @@ export default function AssignmentPage() {
           </Card>
         )}
 
-        {success && <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/20"><CardContent className="flex items-start gap-3 p-5"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" /><p className="text-sm leading-6 text-emerald-800 dark:text-emerald-200">{success}</p></CardContent></Card>}
+          {/* Deadline Passed Message */}
+          {!hasSubmitted && isDeadlinePassed && (
+            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-4">
+                  <AlertCircle className="h-6 w-6 text-amber-600 mt-1" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">
+                      提交截止时间已过
+                    </h3>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      本作业的提交期已结束，不再接受正常提交。
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        {!hasSubmitted && isDeadlinePassed && <Card className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20"><CardContent className="flex items-start gap-3 p-5"><AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><div><h2 className="font-semibold text-amber-950 dark:text-amber-100">提交截止时间已过</h2><p className="mt-1 text-sm text-amber-900/75 dark:text-amber-200/80">本作业的提交期已结束，不再接受正常提交。</p></div></CardContent></Card>}
+          {/* 批改结果（学生查看助教评语） */}
+          {hasSubmitted && feedbackList.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>批改结果</CardTitle>
+                <CardDescription>{feedbackList.length} 名助教的评语</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {feedbackList.map((fb, i) => (
+                    <div key={fb.id || i} className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">助教 {i + 1}</span>
+                        {fb.requireResubmission && (
+                          <Badge variant="destructive" className="text-xs">需要重新提交</Badge>
+                        )}
+                      </div>
+                      {fb.comment && (
+                        <p className="text-sm whitespace-pre-line">{fb.comment}</p>
+                      )}
 
-        {hasSubmitted && <Card><CardHeader><CardTitle>我的提交</CardTitle><CardDescription>提交时间：{format(new Date(submission.submittedAt), "yyyy年MM月dd日 HH:mm")}</CardDescription></CardHeader><CardContent><div className="rounded-lg border bg-slate-50 p-4 text-sm text-muted-foreground dark:bg-slate-900">文件已上传并进入批改流程。</div></CardContent></Card>}
+                      {/* 助教上传的反馈文件（批注图片/PDF） */}
+                      {(() => {
+                        const files: any[] = Array.isArray(fb.files) ? fb.files : [];
+                        if (files.length === 0) return null;
+                        const imageFiles = files.filter((f) =>
+                          (f.fileType || "").startsWith("image/")
+                        );
+                        const otherFiles = files.filter(
+                          (f) => !(f.fileType || "").startsWith("image/")
+                        );
+                        return (
+                          <div className="mt-3 space-y-3">
+                            {imageFiles.length > 0 && (
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                                  <Paperclip className="h-3 w-3" />
+                                  助教反馈图片（{imageFiles.length}）
+                                </p>
+                                <ImagePreview files={imageFiles} />
+                              </div>
+                            )}
+                            {otherFiles.length > 0 && (
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                                  <Paperclip className="h-3 w-3" />
+                                  助教反馈文件（{otherFiles.length}）
+                                </p>
+                                <div className="space-y-1.5">
+                                  {otherFiles.map((f) => (
+                                    <a
+                                      key={f.id}
+                                      href={f.url}
+                                      download={f.fileName}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 text-sm p-2 rounded-md border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                    >
+                                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                      <span className="flex-1 truncate">{f.fileName}</span>
+                                      <Download className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
-        {hasSubmitted && feedbackList.length > 0 && <Card><CardHeader><CardTitle>助教反馈</CardTitle><CardDescription>{feedbackList.length} 条反馈</CardDescription></CardHeader><CardContent className="space-y-3">{feedbackList.map((item, index) => <div key={item.id || index} className="rounded-lg border p-4"><div className="mb-2 flex flex-wrap items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /><span className="text-sm font-medium">助教 {index + 1}</span>{item.requireResubmission && <Badge variant="destructive">需要重新提交</Badge>}</div><p className="whitespace-pre-line text-sm leading-6">{item.comment || "请查看反馈附件。"}</p>{item.createdAt && <p className="mt-2 text-xs text-muted-foreground">{format(new Date(item.createdAt), "yyyy年MM月dd日 HH:mm")}</p>}</div>)}</CardContent></Card>}
+                      {fb.createdAt && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {format(new Date(fb.createdAt), "yyyy年MM月dd日 HH:mm")}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         {hasSubmitted && feedbackList.length === 0 && submission.status !== "COMPLETED" && <Card><CardContent className="flex items-center gap-3 p-5"><Clock3 className="h-5 w-5 text-primary" /><p className="text-sm text-muted-foreground">作业已提交，等待助教批改中。</p></CardContent></Card>}
 

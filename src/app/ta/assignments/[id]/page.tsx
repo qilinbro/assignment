@@ -63,7 +63,7 @@ export default function TAGradingPage() {
             files: item.submission.files || [],
             submittedAt: item.submission.submittedAt,
             studentId: item.submission.studentId,
-            studentName: `学生 ${item.submission.studentId?.slice(-6) || ""}`,
+            studentName: item.student?.name || `学生 ${item.submission.studentId?.slice(-6) || ""}`,
             assignmentTitle: assignment?.title || "作业",
             assignmentId: item.submission.assignmentId,
             taAssignmentId: item.id,

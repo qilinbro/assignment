@@ -406,10 +406,15 @@ export default function AssignmentDetailPage() {
                 ) : viewingFeedback.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">暂无批改评语</p>
                 ) : (
-                  viewingFeedback.map((fb, i) => (
+                  viewingFeedback.map((fb, i) => {
+                    const taName =
+                      fb.ta?.name ||
+                      userNameMap[fb.submissionAssignment?.taId] ||
+                      `助教 ${i + 1}`;
+                    return (
                     <div key={fb.id || i} className="border rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium">助教 {i + 1}</span>
+                        <span className="text-sm font-medium">{taName}</span>
                         {fb.requireResubmission && (
                           <Badge variant="destructive" className="text-xs">需要重新提交</Badge>
                         )}
@@ -425,7 +430,8 @@ export default function AssignmentDetailPage() {
                         </p>
                       )}
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </DialogContent>

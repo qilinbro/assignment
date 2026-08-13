@@ -118,25 +118,81 @@ export default function TADashboard() {
                   <p className="mt-2 text-sm text-muted-foreground">有新的任务时，它们会显示在这里。</p>
                 </CardContent>
               </Card>
-            ) : (
-              <div className="space-y-3">
-                {visibleAssignments.map((item) => {
-                  const title = assignmentTitles[item.submission?.assignmentId] || "作业提交";
-                  const studentLabel = item.submission?.studentId ? `学生 ${item.submission.studentId.slice(-6)}` : "学生";
-                  const isAction = item.status === "PENDING" || item.status === "GRADING";
-                  return (
-                    <Card key={item.id} className="transition-colors hover:border-primary/40">
-                      <CardContent className="p-4 sm:p-5">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="truncate font-semibold">{title}</h3>
-                              <StatusBadge status={item.status} />
-                            </div>
-                            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                              <span>{studentLabel}</span>
-                              {item.submission?.submittedAt && <span>提交于 {format(new Date(item.submission.submittedAt), "MM月dd日 HH:mm")}</span>}
-                            </div>
+            </div>
+
+            {/* Pending Grading */}
+            {(pendingAssignments.length > 0 || gradingAssignments.length > 0) && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>待批改</CardTitle>
+                      <CardDescription>
+                        {pendingAssignments.length + gradingAssignments.length} 份作业需要处理
+                      </CardDescription>
+                    </div>
+                    <Badge variant="destructive">
+                      {pendingAssignments.length + gradingAssignments.length}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[...pendingAssignments, ...gradingAssignments].map((assignment) => (
+                      <div
+                        key={assignment.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="font-medium">
+                              {assignment.student?.name || assignment.submission?.studentId?.slice(-6) || "未知"}
+                            </span>
+                            <StatusBadge status={assignment.status} />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {assignment.submission?.submittedAt
+                              ? `提交于 ${format(new Date(assignment.submission.submittedAt), "MM月dd日 HH:mm")}`
+                              : "提交时间未知"}
+                          </p>
+                        </div>
+                        <Link href={`/ta/assignments/${assignment.id}`}>
+                          <Button>开始批改</Button>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Completed Grading */}
+            {completedAssignments.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>已完成批改</CardTitle>
+                      <CardDescription>
+                        {completedAssignments.length} 份作业已完成
+                      </CardDescription>
+                    </div>
+                    <Badge variant="secondary">{completedAssignments.length}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {completedAssignments.map((assignment) => (
+                      <div
+                        key={assignment.id}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="font-medium">
+                              {assignment.student?.name || assignment.submission?.studentId?.slice(-6) || "未知"}
+                            </span>
+                            <StatusBadge status={assignment.status} />
                           </div>
                           <Link href={`/ta/assignments/${item.id}`} className="shrink-0">
                             <Button variant={isAction ? "default" : "outline"} className="w-full sm:w-auto">

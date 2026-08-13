@@ -53,7 +53,7 @@ export default function CreateAssignmentPage() {
       description: formData.get("description") as string,
       deadline: new Date(formData.get("deadline") as string),
       taIds: selectedTAs,
-      taCount: parseInt(formData.get("taCount") as string),
+      taCount: selectedTAs.length,
       allowResubmission: formData.get("allowResubmission") === "true",
       resubmissionDescription: formData.get("resubmissionDescription") as string,
     };
@@ -220,30 +220,19 @@ export default function CreateAssignmentPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="taCount">每份提交分配的助教数 *</Label>
-                        <Select name="taCount" defaultValue="2" required>
-                          <SelectTrigger>
-                            <SelectValue placeholder="请选择数量" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">每份提交 1 名助教</SelectItem>
-                            <SelectItem value="2">每份提交 2 名助教</SelectItem>
-                            <SelectItem value="3">每份提交 3 名助教</SelectItem>
-                            <SelectItem value="4">每份提交 4 名助教</SelectItem>
-                            <SelectItem value="5">每份提交 5 名助教</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          每份提交将被随机分配给相应数量的助教
-                        </p>
+                        <Label>分配方式</Label>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                          <p className="text-sm text-blue-900 dark:text-blue-100">
+                            所有选中的助教都将看到本作业的<strong>全部学生提交</strong>，并可批改（先到先得：一份提交被任一助教批改后即视为完成，其他助教不会再重复批改）。
+                          </p>
+                        </div>
                       </div>
 
                       {selectedTAs.length > 0 && (
                         <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                           <p className="text-sm">
-                            <strong>分配概要：</strong>每份学生提交将从{" "}
-                            <strong>{selectedTAs.length}</strong> 名所选助教中随机分配给{" "}
-                            <strong>2</strong> 名助教批改。
+                            <strong>分配概要：</strong>每份学生提交都会展示给全部{" "}
+                            <strong>{selectedTAs.length}</strong> 名所选助教，任一助教批改完成即结束。
                           </p>
                         </div>
                       )}

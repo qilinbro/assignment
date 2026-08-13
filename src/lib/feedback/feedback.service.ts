@@ -178,31 +178,26 @@ class FeedbackService implements IFeedbackService {
       newStatus
     );
 
-    // Update the overall submission status
-    // We need to check all assignments for this submission
+    // 先到先得：一份提交被任一助教批改即视为完成。
+    // 把本提交其他仍未完成的 SubmissionAssignment 同步为同一状态，
+    // 这样其他助教的列表里该提交也会进入"已完成"，且因 createFeedback 拒绝对已完成作业再批，
+    // 天然避免同一份提交被多名助教重复批改。
     const allAssignments =
       await submissionRepository.findAssignmentsBySubmissionId(
         submissionAssignment.submissionId
       );
 
-    // Determine the new submission status
-    let newSubmissionStatus: string;
-
-    if (data.requireResubmission) {
-      // If any TA requires resubmission, the status is RESUBMISSION_REQUIRED
-      newSubmissionStatus = "RESUBMISSION_REQUIRED";
-    } else {
-      // Check if all assignments are completed
-      const allCompleted = allAssignments.every(
-        (a) => a.id === data.submissionAssignmentId || a.status === "COMPLETED"
-      );
-
-      if (allCompleted) {
-        newSubmissionStatus = "COMPLETED";
-      } else {
-        newSubmissionStatus = "GRADING";
+    for (const a of allAssignments) {
+      if (a.id === data.submissionAssignmentId) continue; // 当前这条已更新
+      if (a.status !== "COMPLETED" && a.status !== "RESUBMISSION_REQUIRED") {
+        await submissionRepository.updateAssignmentStatus(a.id, newStatus);
       }
     }
+
+    // 提交整体状态：任一批改完成即完成（不再要求所有助教都批改）
+    const newSubmissionStatus = data.requireResubmission
+      ? "RESUBMISSION_REQUIRED"
+      : "COMPLETED";
 
     await submissionService.updateSubmissionStatus(
       submissionAssignment.submissionId,
