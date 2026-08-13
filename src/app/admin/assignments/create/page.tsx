@@ -25,6 +25,7 @@ export default function CreateAssignmentPage() {
   const [tas, setTas] = React.useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [selectedTAs, setSelectedTAs] = React.useState<string[]>([]);
+  const [taCount, setTaCount] = React.useState("1");
 
   React.useEffect(() => {
     // 从数据库获取助教列表
@@ -53,7 +54,7 @@ export default function CreateAssignmentPage() {
       description: formData.get("description") as string,
       deadline: new Date(formData.get("deadline") as string),
       taIds: selectedTAs,
-      taCount: parseInt(formData.get("taCount") as string),
+      taCount: parseInt(taCount),
       allowResubmission: formData.get("allowResubmission") === "true",
       resubmissionDescription: formData.get("resubmissionDescription") as string,
     };
@@ -221,7 +222,7 @@ export default function CreateAssignmentPage() {
 
                       <div className="space-y-2">
                         <Label htmlFor="taCount">每份提交分配的助教数 *</Label>
-                        <Select name="taCount" defaultValue="2" required>
+                        <Select value={taCount} onValueChange={setTaCount} required>
                           <SelectTrigger>
                             <SelectValue placeholder="请选择数量" />
                           </SelectTrigger>
@@ -243,7 +244,7 @@ export default function CreateAssignmentPage() {
                           <p className="text-sm">
                             <strong>分配概要：</strong>每份学生提交将从{" "}
                             <strong>{selectedTAs.length}</strong> 名所选助教中随机分配给{" "}
-                            <strong>2</strong> 名助教批改。
+                            <strong>{taCount}</strong> 名助教批改。
                           </p>
                         </div>
                       )}

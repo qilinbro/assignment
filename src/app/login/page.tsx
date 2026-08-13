@@ -116,15 +116,6 @@ export default function LoginPage() {
                 {submitting ? "登录中..." : "登录"}
               </Button>
             </form>
-
-            <div className="mt-6">
-              <p className="text-center text-sm text-muted-foreground">
-                没有账号？{" "}
-                <Link href="/register" className="text-primary hover:underline font-medium">
-                  立即注册
-                </Link>
-              </p>
-            </div>
           </CardContent>
         </Card>
       </main>
