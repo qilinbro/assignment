@@ -88,6 +88,15 @@ export default function AdminDashboard() {
     pendingResubmissions: assignments.reduce((sum, a) => sum + (a.resubmissions || 0), 0),
   };
 
+  // 用户 id -> 用户名 映射，用于显示真实学生用户名而非截断 ID
+  const userNameMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    users.forEach((u) => {
+      map[u.id] = u.name;
+    });
+    return map;
+  }, [users]);
+
   const isDeadlinePassed = (deadline: string) => {
     return new Date(deadline) < new Date();
   };
@@ -419,7 +428,7 @@ export default function AdminDashboard() {
                       <StatusBadge status={s.status} />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      学生 {s.studentId?.slice(-6)} · {format(new Date(s.submittedAt), "MM月dd日 HH:mm")} · {s.files?.length || 0} 个文件
+                      {userNameMap[s.studentId] || `学生 ${s.studentId?.slice(-6)}`} · {format(new Date(s.submittedAt), "MM月dd日 HH:mm")} · {s.files?.length || 0} 个文件
                     </p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => router.push(`/admin/assignments/${s.assignmentId}`)}>

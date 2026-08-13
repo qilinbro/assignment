@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Clock, Calendar, User, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { Clock, Calendar, User, FileText, CheckCircle, AlertCircle, Download, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/submission/file-upload";
+import { ImagePreview } from "@/components/submission/image-preview";
 import { StatusBadge } from "@/components/assignment/status-badge";
 import { format } from "date-fns";
 
@@ -247,6 +248,56 @@ export default function AssignmentPage() {
                       {fb.comment && (
                         <p className="text-sm whitespace-pre-line">{fb.comment}</p>
                       )}
+
+                      {/* 助教上传的反馈文件（批注图片/PDF） */}
+                      {(() => {
+                        const files: any[] = Array.isArray(fb.files) ? fb.files : [];
+                        if (files.length === 0) return null;
+                        const imageFiles = files.filter((f) =>
+                          (f.fileType || "").startsWith("image/")
+                        );
+                        const otherFiles = files.filter(
+                          (f) => !(f.fileType || "").startsWith("image/")
+                        );
+                        return (
+                          <div className="mt-3 space-y-3">
+                            {imageFiles.length > 0 && (
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                                  <Paperclip className="h-3 w-3" />
+                                  助教反馈图片（{imageFiles.length}）
+                                </p>
+                                <ImagePreview files={imageFiles} />
+                              </div>
+                            )}
+                            {otherFiles.length > 0 && (
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                                  <Paperclip className="h-3 w-3" />
+                                  助教反馈文件（{otherFiles.length}）
+                                </p>
+                                <div className="space-y-1.5">
+                                  {otherFiles.map((f) => (
+                                    <a
+                                      key={f.id}
+                                      href={f.url}
+                                      download={f.fileName}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 text-sm p-2 rounded-md border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                    >
+                                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                      <span className="flex-1 truncate">{f.fileName}</span>
+                                      <Download className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
                       {fb.createdAt && (
                         <p className="text-xs text-muted-foreground mt-2">
                           {format(new Date(fb.createdAt), "yyyy年MM月dd日 HH:mm")}

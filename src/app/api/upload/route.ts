@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 校验文件类型（仅图片）
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "application/pdf"];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
         { error: `不支持的文件类型: ${file.type}` },
