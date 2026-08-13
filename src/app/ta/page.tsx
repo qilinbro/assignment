@@ -154,7 +154,7 @@ export default function TADashboard() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
                             <span className="font-medium">
-                              学生 {assignment.submission?.studentId?.slice(-6) || "未知"}
+                              {assignment.student?.name || assignment.submission?.studentId?.slice(-6) || "未知"}
                             </span>
                             <StatusBadge status={assignment.status} />
                           </div>
@@ -198,7 +198,7 @@ export default function TADashboard() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
                             <span className="font-medium">
-                              学生 {assignment.submission?.studentId?.slice(-6) || "未知"}
+                              {assignment.student?.name || assignment.submission?.studentId?.slice(-6) || "未知"}
                             </span>
                             <StatusBadge status={assignment.status} />
                           </div>
