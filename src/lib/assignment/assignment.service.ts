@@ -114,38 +114,27 @@ class AssignmentService implements IAssignmentService {
 
     const submissions = await submissionRepository.findByAssignmentId(id);
 
-    let totalAssignments = 0;
-    let completedGrading = 0;
-    let pendingGrading = 0;
-    let resubmissions = 0;
-
-    for (const submission of submissions) {
-      const assignments =
-        await submissionRepository.findAssignmentsBySubmissionId(submission.id);
-
-      totalAssignments += assignments.length;
-      completedGrading += assignments.filter(
-        (a) => a.status === "COMPLETED"
-      ).length;
-      pendingGrading += assignments.filter(
-        (a) => a.status === "PENDING" || a.status === "GRADING"
-      ).length;
-
-      // Check if submission requires resubmission
-      if (submission.status === "RESUBMISSION_REQUIRED") {
-        resubmissions++;
-      }
-    }
+    // 统计基于提交状态（submission.status），而非助教分配记录状态
+    const totalSubmissions = submissions.length;
+    const completedGrading = submissions.filter(
+      (s) => s.status === "COMPLETED"
+    ).length;
+    const pendingGrading = submissions.filter(
+      (s) => s.status === "PENDING" || s.status === "GRADING"
+    ).length;
+    const resubmissions = submissions.filter(
+      (s) => s.status === "RESUBMISSION_REQUIRED"
+    ).length;
 
     const gradingProgress =
-      totalAssignments > 0
-        ? Math.round((completedGrading / totalAssignments) * 100)
+      totalSubmissions > 0
+        ? Math.round((completedGrading / totalSubmissions) * 100)
         : 0;
 
     return {
       id,
       title: assignment.title,
-      totalSubmissions: submissions.length,
+      totalSubmissions,
       completedGrading,
       pendingGrading,
       resubmissions,
