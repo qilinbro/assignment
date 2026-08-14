@@ -4,39 +4,56 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Clock3, LogOut, SlidersHorizontal } from "lucide-react";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/assignment/status-badge";
-import { useRequireAuth } from "@/lib/auth/use-require-auth";
 import { useAuth } from "@/components/providers/auth-provider";
-import { format } from "date-fns";
+import { useRequireAuth } from "@/lib/auth/use-require-auth";
+import type { SubmissionStatus } from "@/types/submission";
 
 type Filter = "ACTION" | "ALL" | "COMPLETED";
+
+type GradingTask = {
+  id: string;
+  status: SubmissionStatus;
+  submission?: {
+    assignmentId?: string;
+    studentId?: string;
+    submittedAt?: string | Date;
+  } | null;
+  student?: {
+    name?: string | null;
+  } | null;
+};
 
 export default function TADashboard() {
   useRequireAuth();
   const { user, logout } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = React.useState(true);
-  const [assignments, setAssignments] = React.useState<any[]>([]);
+  const [assignments, setAssignments] = React.useState<GradingTask[]>([]);
   const [assignmentTitles, setAssignmentTitles] = React.useState<Record<string, string>>({});
   const [filter, setFilter] = React.useState<Filter>("ACTION");
 
   React.useEffect(() => {
     Promise.all([
-      fetch("/api/ta/assignments").then((r) => (r.ok ? r.json() : [])),
-      fetch("/api/assignments").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/ta/assignments").then((response) => (response.ok ? response.json() : [])),
+      fetch("/api/assignments").then((response) => (response.ok ? response.json() : [])),
     ])
-      .then(([taData, assignmentData]) => {
-        setAssignments(Array.isArray(taData) ? taData : []);
-        const titles: Record<string, string> = {};
+      .then(([taskData, assignmentData]) => {
+        setAssignments(Array.isArray(taskData) ? taskData : []);
+
         if (Array.isArray(assignmentData)) {
-          assignmentData.forEach((item) => {
-            titles[item.id] = item.title;
+          const titles: Record<string, string> = {};
+          assignmentData.forEach((assignment) => {
+            if (assignment?.id && assignment?.title) {
+              titles[assignment.id] = assignment.title;
+            }
           });
+          setAssignmentTitles(titles);
         }
-        setAssignmentTitles(titles);
       })
       .catch(() => {
         setAssignments([]);
@@ -45,13 +62,28 @@ export default function TADashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const pending = assignments.filter((item) => item.status === "PENDING" || item.status === "GRADING");
-  const completed = assignments.filter((item) => item.status === "COMPLETED");
-  const visibleAssignments = filter === "ACTION" ? pending : filter === "COMPLETED" ? completed : assignments;
+  const pending = assignments.filter(
+    (assignment) => assignment.status === "PENDING" || assignment.status === "GRADING"
+  );
+  const completed = assignments.filter((assignment) => assignment.status === "COMPLETED");
+  const visibleAssignments =
+    filter === "ACTION" ? pending : filter === "COMPLETED" ? completed : assignments;
 
   const handleLogout = async () => {
     await logout();
     router.push("/login");
+  };
+
+  const getStudentName = (assignment: GradingTask) =>
+    assignment.student?.name ||
+    (assignment.submission?.studentId ? `学生 ${assignment.submission.studentId.slice(-6)}` : "未知学生");
+
+  const getAssignmentTitle = (assignment: GradingTask) =>
+    (assignment.submission?.assignmentId && assignmentTitles[assignment.submission.assignmentId]) || "作业提交";
+
+  const getSubmissionTime = (assignment: GradingTask) => {
+    if (!assignment.submission?.submittedAt) return "提交时间未知";
+    return `提交于 ${format(new Date(assignment.submission.submittedAt), "MM月dd日 HH:mm")}`;
   };
 
   return (
@@ -91,8 +123,14 @@ export default function TADashboard() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-primary" />待处理 {pending.length}</span>
-                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" />已完成 {completed.length}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock3 className="h-4 w-4 text-primary" />
+                    待处理 {pending.length}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    已完成 {completed.length}
+                  </span>
                 </div>
               </div>
             </section>
@@ -104,7 +142,12 @@ export default function TADashboard() {
                 ["ALL", "全部"],
                 ["COMPLETED", "已完成"],
               ] as const).map(([value, label]) => (
-                <Button key={value} size="sm" variant={filter === value ? "default" : "outline"} onClick={() => setFilter(value)}>
+                <Button
+                  key={value}
+                  size="sm"
+                  variant={filter === value ? "default" : "outline"}
+                  onClick={() => setFilter(value)}
+                >
                   {label}
                 </Button>
               ))}
@@ -114,98 +157,42 @@ export default function TADashboard() {
               <Card>
                 <CardContent className="flex flex-col items-center px-6 py-16 text-center">
                   <CheckCircle2 className="mb-4 h-10 w-10 text-emerald-600" />
-                  <h2 className="text-lg font-semibold">{filter === "COMPLETED" ? "还没有已完成的批改" : "暂无分配的提交"}</h2>
+                  <h2 className="text-lg font-semibold">
+                    {filter === "COMPLETED" ? "还没有已完成的批改" : "暂无分配的提交"}
+                  </h2>
                   <p className="mt-2 text-sm text-muted-foreground">有新的任务时，它们会显示在这里。</p>
                 </CardContent>
               </Card>
-            </div>
+            ) : (
+              <Card>
+                <CardContent className="divide-y p-0">
+                  {visibleAssignments.map((assignment) => {
+                    const isCompleted = assignment.status === "COMPLETED";
 
-            {/* Pending Grading */}
-            {(pendingAssignments.length > 0 || gradingAssignments.length > 0) && (
-              <Card className="mb-6">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>待批改</CardTitle>
-                      <CardDescription>
-                        {pendingAssignments.length + gradingAssignments.length} 份作业需要处理
-                      </CardDescription>
-                    </div>
-                    <Badge variant="destructive">
-                      {pendingAssignments.length + gradingAssignments.length}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {[...pendingAssignments, ...gradingAssignments].map((assignment) => (
+                    return (
                       <div
                         key={assignment.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                        className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
                       >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <span className="font-medium">
-                              {assignment.student?.name || assignment.submission?.studentId?.slice(-6) || "未知"}
-                            </span>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate font-medium">{getAssignmentTitle(assignment)}</p>
                             <StatusBadge status={assignment.status} />
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {assignment.submission?.submittedAt
-                              ? `提交于 ${format(new Date(assignment.submission.submittedAt), "MM月dd日 HH:mm")}`
-                              : "提交时间未知"}
-                          </p>
+                          <p className="mt-1 text-sm text-muted-foreground">{getStudentName(assignment)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{getSubmissionTime(assignment)}</p>
                         </div>
-                        <Link href={`/ta/assignments/${assignment.id}`}>
-                          <Button>开始批改</Button>
+                        <Link href={`/ta/assignments/${assignment.id}`} className="shrink-0">
+                          <Button variant={isCompleted ? "outline" : "default"} className="w-full sm:w-auto">
+                            {isCompleted ? "查看批改" : "开始批改"}
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
                         </Link>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </CardContent>
               </Card>
-            )}
-
-            {/* Completed Grading */}
-            {completedAssignments.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>已完成批改</CardTitle>
-                      <CardDescription>
-                        {completedAssignments.length} 份作业已完成
-                      </CardDescription>
-                    </div>
-                    <Badge variant="secondary">{completedAssignments.length}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {completedAssignments.map((assignment) => (
-                      <div
-                        key={assignment.id}
-                        className="flex items-center justify-between p-4 border rounded-lg"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <span className="font-medium">
-                              {assignment.student?.name || assignment.submission?.studentId?.slice(-6) || "未知"}
-                            </span>
-                            <StatusBadge status={assignment.status} />
-                          </div>
-                          <Link href={`/ta/assignments/${item.id}`} className="shrink-0">
-                            <Button variant={isAction ? "default" : "outline"} className="w-full sm:w-auto">
-                              {isAction ? "开始批改" : "查看批改"}
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
             )}
           </>
         )}
